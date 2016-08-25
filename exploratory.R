@@ -84,6 +84,23 @@ library(ggplot2)
     
     bnG_final <- mutate(bnG_rd, freq = n/NN)
     
+    # Source: local data frame [106 x 6]
+    # Groups: drinks, religious_affil [54]
+    # 
+    #         drinks religious_affil   sex     n    NN        freq
+    #         <fctr>          <fctr> <chr> <int> <dbl>       <dbl>
+    # 1  desperately     agnosticism     f    25  3184 0.007851759
+    # 2  desperately     agnosticism     m    37  5421 0.006825309
+    # 3  desperately         atheism     f    18  1882 0.009564293
+    # 4  desperately         atheism     m    40  4921 0.008128429
+    # 5  desperately        buddhism     f     5   791 0.006321113
+    # 6  desperately        buddhism     m    15  1090 0.013761468
+    # 7  desperately     catholicism     f     4  2059 0.001942691
+    # 8  desperately     catholicism     m     7  2613 0.002678913
+    # 9  desperately    christianity     f     7  2606 0.002686109
+    # 10 desperately    christianity     m     7  3052 0.002293578
+    # # ... with 96 more rows
+    
     ## Clean up for display
     
     ## reorder factor
@@ -124,11 +141,11 @@ library(ggplot2)
     
     bnG_final <- group_by(bnG_final, religious_affil)
     
-    p1 <- ggplot(bnG_final, aes(x = drinks, y = 100*freq))+#, color = religious_affil)) + 
-        geom_point(size = 1.5) +
+    p1 <- ggplot(bnG_final, aes(x = drinks, y = 100*freq, color = sex))+#, color = religious_affil)) + 
+        geom_point(size = 2, pch = 21, fill = "#FF9933", alpha = 0.8) +
         facet_grid(religious_affil~.) +
         ggtitle("okcupid: religion versus drinking") + 
-        scale_y_log10(breaks = c(0.2, 0.5, 1, 2, 5, 10, 20, 50, 100)) + 
+        scale_y_log10(breaks = c(0.1,  1, 10, 100)) + 
         ylab("percent")
     
     print(p1)
