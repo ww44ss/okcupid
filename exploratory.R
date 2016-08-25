@@ -1,18 +1,17 @@
 ## OKCupid Data Explore
 
+## Winston Saunders
+## v1.1 modified normalization to just be a loop 
+
 library(okcupiddata)
 library(dplyr)
 library(ggplot2)
 
 
-
-
-profiles_m <- profiles
-
 ## RELIGION AND DRINKING
 
     ## clean religion data into broad category
-    bnG <- filter(profiles_m, !is.na(drinks), !is.na(religion), !is.na(sex)) %>% as_data_frame
+    bnG <- filter(profiles, !is.na(drinks), !is.na(religion), !is.na(sex)) %>% as_data_frame
     
     # # A tibble: 38,729 x 22
     #       age     body_type               diet
@@ -38,12 +37,14 @@ profiles_m <- profiles
     # #   status <chr>, essay0 <chr>
     
 
-    ## get affiliation (strip modifiers) using gsu and regex
-    bnG$relig <- gsub(' [A-z ]*', '', bnG$religion) %>% as.factor()
+    ## get affiliation (strip modifiers) using gsub and simple regex
+    bnG$religious_affil <- gsub(' [A-z ]*', '', bnG$religion) %>% as.factor()
+    
     ## convert bnG$drinks to factor
     bnG$drinks <- bnG$drinks %>% as.factor()
+    
     ## group the data 
-    bnG_rd <- group_by(bnG[,c("drinks", "relig", "sex")], drinks, relig, sex) %>% summarize(n = n())
+    bnG_rd <- group_by(bnG[,c("drinks", "religious_affil", "sex")], drinks, religious_affil, sex) %>% summarize(n = n())
     
     #Source: local data frame [106 x 4]
     #Groups: drinks, relig [?]
@@ -63,74 +64,40 @@ profiles_m <- profiles
     # # ... with 96 more rows
     
     
-    bnG_r <- group_by(bnG, relig, sex) %>% summarize(n = n())
+    ## Now need to normalize the drinker 
+    ##  types to the total drinkers by religious affiliation
     
-    # Source: local data frame [18 x 3]
-    # Groups: relig [?]
-    # 
-    #           relig   sex     n
-    #          <fctr> <chr> <int>
-    # 1   agnosticism     f  3184
-    # 2   agnosticism     m  5421
-    # 3       atheism     f  1882
-    # 4       atheism     m  4921
-    # 5      buddhism     f   791
-    # 6      buddhism     m  1090
-    # 7   catholicism     f  2059
-    # 8   catholicism     m  2613
-    # 9  christianity     f  2606
-    # 10 christianity     m  3052
-    # 11     hinduism     f   143
-    # 12     hinduism     m   293
-    # 13        islam     f    34
-    # 14        islam     m    90
-    # 15      judaism     f  1476
-    # 16      judaism     m  1537
-    # 17        other     f  3300
-    # 18        other     m  4237
-    
-    ## Now need to normalize the religiously categorized drinker types to the total drinkers by religious affiliation
-    ## This is more complex, so create a lookup function
+    ## Use a loop thru. *recommendations for more expedient code???
             
-            relig_count <- function(x) {
-                if (x %in% bnG_r$relig) {
-                    y = bnG_r$n[which(x == bnG_r$relig)] %>% as.numeric
-                } else {
-                    y = 0 }
+            ## add normalizing column
+            bnG_rd$NN <- 1
+            
+            ## loop thru each row, filter, and sum
+            i <- 1
+            for (i in 1:nrow(bnG_rd)){
                 
-                y[1]
+                temp <- filter(bnG_rd, religious_affil == bnG_rd$religious_affil[i], sex == bnG_rd$sex[i])
+                bnG_rd$NN[i] <- sum(temp$n)
             }
-            
-            ## apply the function to the bnG_rd data to create a list of total drinkers by affiliation
-            vv <- lapply(bnG_rd$relig, relig_count) %>% as.list
-            ## convert to data
-            vvv <-do.call(rbind,lapply(vv,as.data.frame))
-            
-            colnames(vvv) <- "NN"
-            NN <- vvv %>% as_data_frame
-            
-            # # A tibble: 106 x 1
-            #       NN
-            # *  <dbl>
-            # 1   3184
-            # 2   3184
-            # 3   1882
-            # 4   1882
-            # 5    791
-            # 6    791
-            # 7   2059
-            # 8   2059
-            # 9   2606
-            # 10  2606
-            # # ... with 96 more rows
     
-    bnG_rd <- bnG_rd %>% as_data_frame
-            
-    ## right now cbind does not support tibbles (issue opened in May)
-    bnG_rd <- cbind(bnG_rd, NN) %>% as_data_frame
+    ## normalize
     
     bnG_final <- mutate(bnG_rd, freq = n/NN)
     
+    ## Clean up for display
+    
+    ## reorder factor
+    bnG_final$drinks <- factor(bnG_final$drinks, levels = c("not at all", 
+                                                           "rarely",
+                                                           "socially",
+                                                           "often",
+                                                           "very often",
+                                                           "desperately"))
+    
+    ## express sex in actual words
+    
+    bnG_final$sex<- gsub("m", "male", bnG_final$sex)
+    bnG_final$sex<- gsub("f", "female", bnG_final$sex)
     
     # # A tibble: 106 x 6
     #         drinks        relig   sex     n    NN        freq
@@ -147,10 +114,76 @@ profiles_m <- profiles
     # 10 desperately christianity     m     7  2606 0.002686109
     # # ... with 96 more rows
     
-    p <- ggplot(bnG_final, aes(x = drinks, y = relig, size = freq)) +
+    p <- ggplot(bnG_final, aes(x = drinks, y = religious_affil, size = freq)) +
         geom_point(alpha = 0.9, fill = "#FF9933", pch=21, color = "darkred") +
-        ggtitle("okcupid: drinking and religion") + facet_grid(sex~.)
+        ggtitle("okcupid: drinks versus religion") + facet_grid(sex~.) + 
+        ylab("religious affiliation")
     
 
     print(p)
+    
+    bnG_final <- group_by(bnG_final, religious_affil)
+    
+    p1 <- ggplot(bnG_final, aes(x = drinks, y = 100*freq))+#, color = religious_affil)) + 
+        geom_point(size = 1.5) +
+        facet_grid(religious_affil~.) +
+        ggtitle("okcupid: religion versus drinking") + 
+        scale_y_log10(breaks = c(0.2, 0.5, 1, 2, 5, 10, 20, 50, 100)) + 
+        ylab("percent")
+    
+    print(p1)
+    
+## AGE AND DRINKING
+    
+    ## clean data into broad category
+    bnG <- filter(profiles, !is.na(drinks), !is.na(age), !is.na(sex)) %>% as_data_frame
+    
+    ## set factor order
+    bnG$drinks <- factor(bnG$drinks, levels = c("not at all", 
+                                                            "rarely",
+                                                            "socially",
+                                                            "often",
+                                                            "very often",
+                                                            "desperately"))
+    
+    bnG$sex<- gsub("m", "male", bnG$sex)
+    bnG$sex<- gsub("f", "female", bnG$sex)
+    
+    ggplot(bnG, aes(x = drinks, y = age)) + 
+        geom_violin(alpha = 0.3, size = 1, fill = "#FF9933", color = "darkred") + 
+        ggtitle("okcupid: drinks versus age") + facet_grid(sex~.)
+    
+    bnG <- mutate(bnG, age_range = 2.5 + 5 * floor(age / 5) )
+    
+    bnG <- group_by(bnG, age_range, sex, drinks) %>% summarize(n=n())
+    
+    ## Use a loop thru. *recommendations for more expedient code???
+    
+    ## add normalizing column
+    bnG$NN <- 1
+    
+    ## loop thru each row, filter, and sum
+    i <- 1
+    for (i in 1:nrow(bnG)){
+        
+        temp <- filter(bnG, age_range == bnG$age_range[i], sex == bnG$sex[i])
+        bnG$NN[i] <- sum(temp$n)
+    }
+    
+    bnG <- mutate(bnG, pct = 100*n/NN)
+    bnG <- filter(bnG, age_range >= 20)
+    
+    p2 <- ggplot(bnG, aes(x = drinks, y = age_range, size = pct)) +
+        geom_point(alpha = 0.9, fill = "#FF9933", pch=21, color = "darkred") +
+        ggtitle("okcupid: drinks versus age") + facet_grid(sex~.) + 
+        ylab("age_range")
+    
+    print(p2)
+    
+    p3 <- ggplot(bnG, aes(x = age_range, y = pct, color = drinks)) + geom_line(size = 2) +
+        facet_grid(sex~.) +
+        ggtitle("okcupid: drinking versus age") + 
+        scale_y_log10(breaks = c(0.2, 0.5, 1, 2, 5, 10, 20, 50, 100))
+    
+    print(p3)
     
