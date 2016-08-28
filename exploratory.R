@@ -221,7 +221,7 @@ library(ggplot2)
     
     print(p2)
     
-    p3 <- ggplot(bnA, aes(x = age_range, y = pct, color = drinks)) + geom_line(size = 2) +
+    p3 <- ggplot(bnA_final, aes(x = age_range, y = percent, color = drinks)) + geom_line(size = 2) +
         facet_grid(sex~.) +
         ggtitle("okcupid: drinking versus age") + 
         scale_y_log10(breaks = c(0.2, 0.5, 1, 2, 5, 10, 20, 50, 100))
