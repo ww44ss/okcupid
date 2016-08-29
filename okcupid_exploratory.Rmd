@@ -16,6 +16,7 @@ library(okcupiddata)
 library(dplyr)
 library(ggplot2)
 library(RColorBrewer)
+library(gridExtra)
 
 ```
 ## RELIGION AND DRINKING
@@ -402,34 +403,53 @@ library(RColorBrewer)
 
 ```
 
-## NUMBER VERSUS AGE
+## AGE DISTRIBUTION
 
-```{r echo=FALSE, fig.align='center', fig.height=4,fig.width=7.5}
+```{r echo=FALSE, fig.align='center', fig.height=3,fig.width=7.5}
  
     
     ## clean religion data into broad category
-    bnG <- filter(profiles, !is.na(age), !is.na(sex), age > 18, age < 80) %>% 
+    cleaned <- filter(profiles, !is.na(age), !is.na(sex), age > 18, age < 80) %>% 
             as_data_frame %>%
             select(sex, age)
 
-    bnG$sex<- bnG$sex %>% gsub("m", "male", .) %>% gsub("f", "female", .)
+    cleaned$sex<- cleaned$sex %>% gsub("m", "male", .) %>% gsub("f", "female", .)
     
 
-    bnG <- bnG %>% mutate(age_group = 2 + 4 * floor(age/4))
-    bnG$age_group <- bnG$age_group %>% as.factor
-    
-    ## group the data 
-    age_count <- group_by(bnG[,c("age_group", "sex")], age_group, sex) %>% summarize(n_age = n())
+```
 
+
+
+```{r echo=TRUE, fig.align='center', fig.height=3,fig.width=7.5}
+## ANALYZE AGE DISTRIBUTION
+
+    ## compute age groups using mutate
+    analyzed <- cleaned %>% mutate(age_group = 2 + 4 * floor(age/4))
+    analyzed$age_group <- analyzed$age_group %>% as.factor
     
-    sex_count <- group_by(bnG[,c("sex")], sex) %>% summarize(n_sex = n())
-    
+    ## group the data and summarized total by sex and age
+    age_count <- group_by(analyzed[,c("age_group", "sex")], age_group, sex) %>% summarize(n_age = n())
+    ## count the total number of males and females
+    sex_count <- group_by(analyzed[,c("sex")], sex) %>% summarize(n_sex = n())
+    ## join the data
     analyzed <- left_join(age_count, sex_count, by = "sex") %>% mutate(freq = n_age/n_sex, freq = ifelse(is.na(freq), 0, freq))
     
+    ## data snapshot
+    #    age_group    sex n_age n_sex        freq
+    #       <fctr>  <chr> <int> <int>       <dbl>
+    # 1         18 female   281 23955 0.011730328
+    # 2         18   male   330 35680 0.009248879
+    # 3         22 female  2838 23955 0.118472135
+    # 4         22   male  3923 35680 0.109949552
+    # 5         26 female  5325 23955 0.222291797
+    
+```
+
+```{r echo=FALSE, fig.align='center', fig.height=3,fig.width=7.5}
 
 
     
-    n.color <- length(unique(bnG$age_group))
+    n.color <- length(unique(analyzed$age_group))
     getPalette = colorRampPalette(brewer.pal(8, "Dark2"))
     
 
@@ -450,21 +470,15 @@ library(RColorBrewer)
     
     
 
-    p <- ggplot(analyzed, aes(x = age_group, y = 100*freq, color = sex, group = sex)) +
-        geom_line(size = 2) +
+    p_dist <- ggplot(analyzed, aes(x = age_group, y = 100*freq, color = sex, group = sex)) +
+        geom_line(size = 1.5) +
         #geom_bar(aes(fill = sex), position = "dodge") +
-        ggtitle("okcupid: age and sex") +
-        scale_fill_manual(values = getPalette(2)) + 
+        ggtitle("okcupid: age distribution") +
+        scale_color_manual(values = c("#DD9834", "#3498DD")) + 
         ylab("percent") + 
         xlab("age_group")
     
-    print(p)
-       
     
-
-```
-
-```{r, fig.align='center', fig.height=4,fig.width=7.5}
 
 male <- analyzed %>% filter(sex == "male") %>% select(age_group, sex, freq)
 female <- analyzed %>% filter(sex == "female") %>% select(age_group, sex, freq)
@@ -476,22 +490,21 @@ analyzed_wide <- inner_join(male, female, by = "age_group") %>% mutate(pop_diff 
 analyzed_wide2 <- analyzed_wide %>% as.data.frame %>% mutate(male_cummul = cumsum(freq.x), female_cummul = cumsum(freq.y))
 
 
-p <- ggplot(analyzed_wide2, aes(x = age_group, y = male_cummul, group = sex.x)) +
-        geom_line(size = 1.5, color = "#DD9834") +
-        geom_line(aes(y = female_cummul, group = sex.y), size = 1.5, color = "#3498DD") +
+p_cummul <- ggplot(analyzed_wide2, aes(x = age_group, y = male_cummul, group = sex.x)) +
+        geom_line(size = 1.5, color = "#3498DD") +
+        geom_line(aes(y = female_cummul, group = sex.y), size = 1.5, color = "#DD9834") +
         ylab("cummulative percent") +
         xlab("age") +
         ggtitle("cummulative populations by age")
     
-print(p)
+grid.arrange(p_dist, p_cummul, ncol=2)
 
 
-p <- ggplot(analyzed_wide, aes(x = age_group, y = freq.x, group = sex.x)) +
-        geom_line(size = 1.5, color = "#DD9834") +
-        geom_line(aes(y = freq.y, group = sex.y), size = 1.5, color = "#3498DD") +
-        ylab("cummulative percent") +
+p <- ggplot(analyzed_wide, aes(x = age_group, y = pop_diff, group = sex.x)) +
+        geom_line(size = 1.2, color = "darkred") +
+        ylab("percent") +
         xlab("age") +
-        ggtitle("cummulative populations by age")
+        ggtitle("population difference by age")
     
 print(p)
 
