@@ -682,7 +682,7 @@ Surprisingly, men and women greatly differ in religious affiliation, with approx
 Surprisingly, men and women greatly differ in religious affiliation, with approximately 45% of men reprting to be either atheist or agnostic versus 35% for women.
 
 
-```{r echo=FALSE, fig.align='center', fig.height=5,fig.width=7.5, message = FALSE}
+```{r echo = FALSE, fig.align = 'center', fig.height = 3 , fig.width = 7.5 , message = FALSE}
  
     
     ## clean religion data into broad category
@@ -733,17 +733,12 @@ Surprisingly, men and women greatly differ in religious affiliation, with approx
     
     print(p)
     
-    p <- ggplot(analyzed, aes(x = income, y = 100*freq, group = drinks)) +
-        geom_line(aes(color = drinks), size = 13) +
-        ggtitle("drinking and income") +
-        scale_color_manual(values = getPalette(n.color)) + 
-        ylab("percent") + 
-        xlab("income") +
-        scale_y_log10(breaks = c(0.2, 0.5, 1, 2, 5, 10, 20, 50, 100)) + 
-        facet_grid(sex~.)
-    
-    print(p)
-    
+```    
+
+The most obvious in the graph above is that social drinkingm, the largest component of the rinking spectrum, shows an obvious arc, with the frequency of social drinkers peaking in the middle of the range and decreasing on the edges. We can get a better look at the 
+
+```{r echo = FALSE, fig.align = 'center', fig.height = 3 , fig.width = 7.5 , message = FALSE}
+
     p3 <- ggplot(analyzed, aes(x = income, y = 100*freq, color = drinks, group = drinks)) + geom_line(size = 1.2) +
         scale_color_manual(values = getPalette(n.color)) + 
         facet_grid(sex~.) +
