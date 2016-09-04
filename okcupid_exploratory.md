@@ -200,7 +200,11 @@ Surprisingly, men and women greatly differ in religious affiliation, with approx
 Surprisingly, men and women greatly differ in religious affiliation, with approximately 45% of men reprting to be either atheist or agnostic versus 35% for women.
 
 
-<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-21-1.png" style="display: block; margin: auto;" /><img src="okcupid_exploratory_files/figure-html/unnamed-chunk-21-2.png" style="display: block; margin: auto;" /><img src="okcupid_exploratory_files/figure-html/unnamed-chunk-21-3.png" style="display: block; margin: auto;" />
+<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-21-1.png" style="display: block; margin: auto;" />
+
+The most obvious in the graph above is that social drinking, the largest component of the spectrum, shows an obvious arc, with social drinking peaking in the middle of the income range and decreasing on the edges. 
+
+<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-22-1.png" style="display: block; margin: auto;" />
 
 
 Let's try looking at the sentiment of the texts
