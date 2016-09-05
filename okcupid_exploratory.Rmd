@@ -392,10 +392,12 @@ The data are cleaned by filtering NA's and then grouped and counted as above.
 Beyond just simple statistics on age we can look into the correlations of behaviors. In this case, I look at the drinking habits of OkCupid users based on religiosity, income, and age.   
 
 
-### Age and Drinking
+### How des driking change with age for men and women?
 
+The manchinery above is easily adapted to exploring the relationship of drinking and age. In this case a very clear pattern emerges for both men and women, with a pronounced  tendency toward lighter driking in older age for women. 
 
-The manchinery above is also easily adapted to exploring the relationship of drinking and age. In this case a very clear pattern emerges for both men and women, with a pronounced  tendency toward lighter drinking with increased age. 
+These findings are consistent with results (published)[http://bmcmedicine.biomedcentral.com/articles/10.1186/s12916-015-0273-z] by Annie Britton, Yoav Ben-Shlomo, Michaela Benzeval, Diana Kuh and Steven Bell.
+
 
 ```{r echo=4, fig.align='center', fig.height=5,fig.width=7.5, message = FALSE}
     
