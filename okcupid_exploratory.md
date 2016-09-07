@@ -343,11 +343,18 @@ The machinery above is easily adapted to exploring the relationship of drinking 
         scale_fill_manual(values = getPalette(n.color)) + 
         ylab("percent") + 
         xlab("age")
-    
-    print(p)
 ```
 
-<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-23-1.png" style="display: block; margin: auto;" />
+In this case clear trends emerge which were masked in the basic analysis above. 
+
+
+```r
+  print(p)
+```
+
+<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-24-1.png" style="display: block; margin: auto;" />
+
+
 
 In this case a very clear pattern emerges for both men and women, with a pronounced  tendency toward lighter drinking in older age, especially for women. 
 
@@ -355,7 +362,8 @@ These findings are consistent with, for instance, results [published](http://bmc
 
 We get a better look at the data using a semi-log plot. Again, the age data has been bucketing into groups of five years.  
     
-<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-24-1.png" style="display: block; margin: auto;" />
+<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-25-1.png" style="display: block; margin: auto;" />
+
 
 
 
@@ -397,7 +405,7 @@ The data are cleaned by filtering NA's and then grouped and counted as above.
     cleaned$religious_affil <- gsub(' [A-z ]*', '', cleaned$religion) %>% as.factor()
 ```
 
-<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-26-1.png" style="display: block; margin: auto;" />
+<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-27-1.png" style="display: block; margin: auto;" />
 
 Some obvious patterns revela themselves. Social drinking is by far the largest category.  
 
@@ -418,7 +426,7 @@ For non-devout we select for _"not too serious"_ and _"laughing about it"_ prior
     cleaned <- filter(cleaned, grepl("not too serious", religion) | grepl("laughing about it", religion))
 ```
 
-<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-29-1.png" style="display: block; margin: auto;" />
+<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-30-1.png" style="display: block; margin: auto;" />
 
 
 In this case there is a fairly strong difference in the drinking behavior of those who are classified "devout" compared to those in the "non-devout" category.
@@ -429,18 +437,18 @@ In this case there is a fairly strong difference in the drinking behavior of tho
 Surprisingly, men and women greatly differ in religious affiliation, with approximately 45% of men reporting to be either atheist or agnostic versus 35% for women.
 
 
-<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-30-1.png" style="display: block; margin: auto;" />
+<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-31-1.png" style="display: block; margin: auto;" />
 
 ###Income and Drinking Habits
 
 
 
 
-<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-31-1.png" style="display: block; margin: auto;" />
+<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-32-1.png" style="display: block; margin: auto;" />
 
 The most obvious in the graph above is that social drinking, the largest component of the spectrum, shows an obvious trend, with social drinking peaking in the middle of the income range and decreasing on the edges. 
 
-<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-32-1.png" style="display: block; margin: auto;" />
+<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-33-1.png" style="display: block; margin: auto;" />
 
 
 ## Some Conclusions  
