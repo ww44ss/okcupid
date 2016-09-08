@@ -9,14 +9,21 @@ output:
 ---
 
 
-##Quick Summary  
-This explores several relationships in the OkCupid data recently [published on CRAN](https://cran.rstudio.com/web/packages/okcupiddata/index.html). Results explored in this document include:  
-1. Exporation of base deographcis of sex, age, income, religion, drinking, and ethnicity. 
-2. The correlation of drinking habits to religion, piety, income, sex and age.
-3. Exploration of an income predictor using the above variables. 
+##Summary  
+This explores several relationships in the OkCupid data recently [published on CRAN](https://cran.rstudio.com/web/packages/okcupiddata/index.html). Results explored in this document include:      
+1. An exploration of demographics of sex, age, income, religiosity, drinking, and ethnicity of OkCupid users.  
+2. The correlation of drinking habits to religiosity, income, sex and age.  
 
+Some key observations: 
+- Over 50% of OkCupid users lie in a narrow  
+- Less than of OkCUpid users are over 50 years old
+- Men outnumber women 3:2, though the ratio decreases strongly with age over 50.
+- Women OkCUpid users have a wider distribution of age than do men.
+- Women show strong affilation to Judeo-Christian religions than do men. 
+- Over 50% of male OkCupid users are either athiestic or agnostic.
+- Men's and Women's drinking habits are similar about 75% identifying themselves as "social drinkers."   
 
-##Getting the Data
+#Getting the Data
 The OkCupid data is published on [CRAN](https://cran.rstudio.com/web/packages/okcupiddata/index.html) as a package for R users. The data set consists of user profile data for 59,946 San Francisco OkCupid users (a free online dating website) from June 2012. The data are describded in the paper: Albert Y. Kim, Adriana Escobedo-Land (2015). OkCupid Profile Data for Introductory Statistics and Data Science Courses. Journal of Statistics Education, 23(2), which you can find [here]( http://www.amstat.org/publications/jse/v23n2/kim.pdf)
 
 ```{r, echo=FALSE, message = FALSE}
@@ -52,7 +59,7 @@ profiles %>% colnames
 
 Evidently the dataset is very rich. I explore a few individual female - male behavior trends in the first section below, and then focus on the correaltion of drinking habits to some of these trends in the second section. 
 
-## Base Behaviors and Demographics
+# Behaviors and Demographics
 
 
 The first thing to look at are the base behaviors and demographics of OkCupid users. Since we'll be splitting everything into male and female subsets, lets first get a handle on the differences in the population based on age and sex.
@@ -585,11 +592,11 @@ Since speed and simplicity are goals of this analysis, I stripped off everything
 
 In this anlaysis the majority of OkCupid users are found to be white, with small differences between the male and female populations of other ethnicities. The numbers above do not reflect [the demographics of San Francisco's population as a whole](https://en.wikipedia.org/wiki/San_Francisco), which is 48.5% White, 33% asian, 15% Hispanic, and 6% Black. 
 
-## Digging Deeper: How Does Drinking Behavior Correlate to Demographic Data?
+## Digging Deeper: Does Drinking Behavior Correlate to other Demographics?
 
 In this part of the analysis, I wanted to correlate deeper dives into behavioral data (in this case drinking) with demographic data. It turns out to provide some interesting insights. 
 
-### How does drinking change with age for men and women?
+### Do drinking habits change with age?
 
 The machinery above is easily adapted to exploring the relationship of drinking and age. Just to illustrate it I add the code below.  
 
@@ -644,18 +651,39 @@ The machinery above is easily adapted to exploring the relationship of drinking 
 
 In this case clear trends emerge which were masked in the basic analysis above. 
 
-```{r echo=TRUE, fig.align='center', fig.height=5,fig.width=7.5, message = FALSE}
+```{r echo=FALSE, fig.align='center', fig.height=5,fig.width=7.5, message = FALSE}
   print(p)
 
 ```
 
 
 
-In this case a very clear pattern emerges for both men and women, with a pronounced  tendency toward lighter drinking in older age, especially for women. 
+There is a pronounced tendency toward lighter drinking in older age. 
 
-These findings are consistent with, for instance, results [published](http://bmcmedicine.biomedcentral.com/articles/10.1186/s12916-015-0273-z) by _Annie Britton, Yoav Ben-Shlomo, Michaela Benzeval, Diana Kuh and Steven Bell_, who report also that drinking tends to decrease with incereasing age.
+These findings are consistent with, for instance, results [results published by _Annie Britton, Yoav Ben-Shlomo, Michaela Benzeval, Diana Kuh and Steven Bell_](http://bmcmedicine.biomedcentral.com/articles/10.1186/s12916-015-0273-z), who report also that drinking tends to decrease with increasing age. 
 
-We get a better look at the data using a semi-log plot. Again, the age data has been bucketing into groups of five years.  
+```{r echo = FALSE}
+male_often_over_60 <- analyzed %>% filter(age_range >= 52.5, sex == "male", drinks == "often") %>% ungroup() %>% summarize(sum(n))
+
+female_often_over_60 <-  analyzed %>% filter(age_range >= 52.5, sex == "female", drinks == "often") %>% ungroup() %>% summarize(sum(n))
+
+mf_ratio <- male_often_over_60/female_often_over_60
+
+```
+
+  
+One apparent diveregence between men and women in the "drinks often" above age 55. In this category the number of male drinkers is `r male_often_over_60` and female drinkers `r female_often_over_60`. These numbers together imply that the ratio 
+
+$$ r = \frac{"drinks\ often"\ males\ over\ 50}{"drinks\ often"\ females\ over\ 50} = `r mf_ratio %>% round(2)` $$
+
+but with an uncertainty from random error (so-called "counting statistics") of 
+
+$$ \sigma = \sqrt{\frac{1}{"drinks\ often"\ males\ over\ 50} + \frac{1}{"drinks\ often"\ females\ over\ 50} } = `r 100*sqrt(1/male_often_over_60 + 1/female_often_over_60) %>% round(2)` \% $$
+
+
+Thus, while men appear about twice as likely as women to drink heavily above age 50, the result is not extremely high confidence. 
+
+We get a better look at some of the more subtle trends in the data using a semi-log plot. Again, the age data has been bucketing into groups of five years.  
     
 ```{r echo=FALSE, fig.align='center', fig.height=4,fig.width=6.5, message = FALSE}   
 ## clean data into broad category
@@ -696,8 +724,6 @@ We get a better look at the data using a semi-log plot. Again, the age data has 
     print(p3)
     
 ```  
-
-
 
 
 

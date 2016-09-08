@@ -3,14 +3,21 @@ Winston Saunders
 August 27, 2016  
 
 
-##Quick Summary  
-This explores several relationships in the OkCupid data recently [published on CRAN](https://cran.rstudio.com/web/packages/okcupiddata/index.html). Results explored in this document include:  
-1. Exporation of base deographcis of sex, age, income, religion, drinking, and ethnicity. 
-2. The correlation of drinking habits to religion, piety, income, sex and age.
-3. Exploration of an income predictor using the above variables. 
+##Summary  
+This explores several relationships in the OkCupid data recently [published on CRAN](https://cran.rstudio.com/web/packages/okcupiddata/index.html). Results explored in this document include:      
+1. An exploration of demographics of sex, age, income, religiosity, drinking, and ethnicity of OkCupid users.  
+2. The correlation of drinking habits to religiosity, income, sex and age.  
 
+Some key observations: 
+- Over 50% of OkCupid users lie in a narrow  
+- Less than of OkCUpid users are over 50 years old
+- Men outnumber women 3:2, though the ratio decreases strongly with age over 50.
+- Women OkCUpid users have a wider distribution of age than do men.
+- Women show strong affilation to Judeo-Christian religions than do men. 
+- Over 50% of male OkCupid users are either athiestic or agnostic.
+- Men's and Women's drinking habits are similar about 75% identifying themselves as "social drinkers."   
 
-##Getting the Data
+#Getting the Data
 The OkCupid data is published on [CRAN](https://cran.rstudio.com/web/packages/okcupiddata/index.html) as a package for R users. The data set consists of user profile data for 59,946 San Francisco OkCupid users (a free online dating website) from June 2012. The data are describded in the paper: Albert Y. Kim, Adriana Escobedo-Land (2015). OkCupid Profile Data for Introductory Statistics and Data Science Courses. Journal of Statistics Education, 23(2), which you can find [here]( http://www.amstat.org/publications/jse/v23n2/kim.pdf)
 
 
@@ -43,7 +50,7 @@ profiles %>% colnames
 
 Evidently the dataset is very rich. I explore a few individual female - male behavior trends in the first section below, and then focus on the correaltion of drinking habits to some of these trends in the second section. 
 
-## Base Behaviors and Demographics
+# Behaviors and Demographics
 
 
 The first thing to look at are the base behaviors and demographics of OkCupid users. Since we'll be splitting everything into male and female subsets, lets first get a handle on the differences in the population based on age and sex.
@@ -291,11 +298,11 @@ Since speed and simplicity are goals of this analysis, I stripped off everything
 
 In this anlaysis the majority of OkCupid users are found to be white, with small differences between the male and female populations of other ethnicities. The numbers above do not reflect [the demographics of San Francisco's population as a whole](https://en.wikipedia.org/wiki/San_Francisco), which is 48.5% White, 33% asian, 15% Hispanic, and 6% Black. 
 
-## Digging Deeper: How Does Drinking Behavior Correlate to Demographic Data?
+## Digging Deeper: Does Drinking Behavior Correlate to other Demographics?
 
 In this part of the analysis, I wanted to correlate deeper dives into behavioral data (in this case drinking) with demographic data. It turns out to provide some interesting insights. 
 
-### How does drinking change with age for men and women?
+### Do drinking habits change with age?
 
 The machinery above is easily adapted to exploring the relationship of drinking and age. Just to illustrate it I add the code below.  
 
@@ -347,24 +354,31 @@ The machinery above is easily adapted to exploring the relationship of drinking 
 
 In this case clear trends emerge which were masked in the basic analysis above. 
 
-
-```r
-  print(p)
-```
-
 <img src="okcupid_exploratory_files/figure-html/unnamed-chunk-24-1.png" style="display: block; margin: auto;" />
 
 
 
-In this case a very clear pattern emerges for both men and women, with a pronounced  tendency toward lighter drinking in older age, especially for women. 
+There is a pronounced tendency toward lighter drinking in older age. 
 
-These findings are consistent with, for instance, results [published](http://bmcmedicine.biomedcentral.com/articles/10.1186/s12916-015-0273-z) by _Annie Britton, Yoav Ben-Shlomo, Michaela Benzeval, Diana Kuh and Steven Bell_, who report also that drinking tends to decrease with incereasing age.
+These findings are consistent with, for instance, results [results published by _Annie Britton, Yoav Ben-Shlomo, Michaela Benzeval, Diana Kuh and Steven Bell_](http://bmcmedicine.biomedcentral.com/articles/10.1186/s12916-015-0273-z), who report also that drinking tends to decrease with increasing age. 
 
-We get a better look at the data using a semi-log plot. Again, the age data has been bucketing into groups of five years.  
+
+
+  
+One apparent diveregence between men and women in the "drinks often" above age 55. In this category the number of male drinkers is 106 and female drinkers 58. These numbers together imply that the ratio 
+
+$$ r = \frac{"drinks\ often"\ males\ over\ 50}{"drinks\ often"\ females\ over\ 50} = 1.83 $$
+
+but with an uncertainty from random error (so-called "counting statistics") of 
+
+$$ \sigma = \sqrt{\frac{1}{"drinks\ often"\ males\ over\ 50} + \frac{1}{"drinks\ often"\ females\ over\ 50} } = 16 \% $$
+
+
+Thus, while men appear about twice as likely as women to drink heavily above age 50, the result is not extremely high confidence. 
+
+We get a better look at some of the more subtle trends in the data using a semi-log plot. Again, the age data has been bucketing into groups of five years.  
     
-<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-25-1.png" style="display: block; margin: auto;" />
-
-
+<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-26-1.png" style="display: block; margin: auto;" />
 
 
 
@@ -405,7 +419,7 @@ The data are cleaned by filtering NA's and then grouped and counted as above.
     cleaned$religious_affil <- gsub(' [A-z ]*', '', cleaned$religion) %>% as.factor()
 ```
 
-<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-27-1.png" style="display: block; margin: auto;" />
+<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-28-1.png" style="display: block; margin: auto;" />
 
 Some obvious patterns revela themselves. Social drinking is by far the largest category.  
 
@@ -426,7 +440,7 @@ For non-devout we select for _"not too serious"_ and _"laughing about it"_ prior
     cleaned <- filter(cleaned, grepl("not too serious", religion) | grepl("laughing about it", religion))
 ```
 
-<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-30-1.png" style="display: block; margin: auto;" />
+<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-31-1.png" style="display: block; margin: auto;" />
 
 
 In this case there is a fairly strong difference in the drinking behavior of those who are classified "devout" compared to those in the "non-devout" category.
@@ -437,18 +451,18 @@ In this case there is a fairly strong difference in the drinking behavior of tho
 Surprisingly, men and women greatly differ in religious affiliation, with approximately 45% of men reporting to be either atheist or agnostic versus 35% for women.
 
 
-<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-31-1.png" style="display: block; margin: auto;" />
+<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-32-1.png" style="display: block; margin: auto;" />
 
 ###Income and Drinking Habits
 
 
 
 
-<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-32-1.png" style="display: block; margin: auto;" />
+<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-33-1.png" style="display: block; margin: auto;" />
 
 The most obvious in the graph above is that social drinking, the largest component of the spectrum, shows an obvious trend, with social drinking peaking in the middle of the income range and decreasing on the edges. 
 
-<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-33-1.png" style="display: block; margin: auto;" />
+<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-34-1.png" style="display: block; margin: auto;" />
 
 
 ## Some Conclusions  
