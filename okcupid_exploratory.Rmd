@@ -10,18 +10,18 @@ output:
 
 
 ##Summary  
-This explores several relationships in the OkCupid data recently [published on CRAN](https://cran.rstudio.com/web/packages/okcupiddata/index.html). Results explored in this document include:      
-1. An exploration of demographics of sex, age, income, religiosity, drinking, and ethnicity of OkCupid users.  
-2. The correlation of drinking habits to religiosity, income, sex and age.  
+This explores several relationships in the OkCupid data recently [published on CRAN](https://cran.rstudio.com/web/packages/okcupiddata/index.html). Results explored in this document include the demographics of sex, age, income, religiosity, drinking, and ethnicity of OkCupid users and, as a specific analysis, the correlation of drinking habits to religiosity, income, sex and age.  
 
 Some key observations: 
-- Over 50% of OkCupid users lie in a narrow  
-- Less than of OkCUpid users are over 50 years old
-- Men outnumber women 3:2, though the ratio decreases strongly with age over 50.
-- Women OkCUpid users have a wider distribution of age than do men.
-- Women show strong affilation to Judeo-Christian religions than do men. 
-- Over 50% of male OkCupid users are either athiestic or agnostic.
-- Men's and Women's drinking habits are similar about 75% identifying themselves as "social drinkers."   
+- The "most common" user is a 26 year old white male college graduate who drinks socially, is religiously agnostic, and who makes $20000 per year.
+- 50% of OkCupid users are between 26 and 37 years old.    
+- Less than 5% of OkCupid users are over 52 years old.
+- Men outnumber women 3:2 overall, though the ratio is stonrgly age dependent  
+- Women report a strong affilation to Judeo-Christian religions than do men.   
+- Over 50% of male OkCupid users identify as either athiestic or agnostic.  
+- Drinking habits of men and women are similar, with about 75% identifying as "social drinkers." 
+- The ethnic distribution of OkCUpid users skus heavily toward "white"
+
 
 #Getting the Data
 The OkCupid data is published on [CRAN](https://cran.rstudio.com/web/packages/okcupiddata/index.html) as a package for R users. The data set consists of user profile data for 59,946 San Francisco OkCupid users (a free online dating website) from June 2012. The data are describded in the paper: Albert Y. Kim, Adriana Escobedo-Land (2015). OkCupid Profile Data for Introductory Statistics and Data Science Courses. Journal of Statistics Education, 23(2), which you can find [here]( http://www.amstat.org/publications/jse/v23n2/kim.pdf)
@@ -61,10 +61,40 @@ Evidently the dataset is very rich. I explore a few individual female - male beh
 
 # Behaviors and Demographics
 
-
 The first thing to look at are the base behaviors and demographics of OkCupid users. Since we'll be splitting everything into male and female subsets, lets first get a handle on the differences in the population based on age and sex.
 
-### How many men and women use OkCupid?
+### What is the "Max Freq Hybrid" (MFH) of OkCupid?  
+
+We can do an interesting thought-experiment by asking "what does is the composite of the most frequent value of each variable look like?" For short hand I'll call this the "Max Freq Hybird" or MFH.
+
+The value is easily computed with a helper function
+
+```{r echo = TRUE}
+
+  table_max <- function(t) {
+        ## finds the name of the most common value in table
+        ## input: the result of a table() function call
+        ## returns: a character naming the most frequent value
+        ## note: has no error handling
+        b <- t %>% max()
+        names(t[t == max(t)]) %>% return
+  }
+```
+
+This "MFH" is (values in italics are computed) is an ethnically *`r profiles %>% select(ethnicity) %>% table() %>% table_max()`* *`r profiles %>% select(sex) %>% table() %>% table_max() %>% gsub("m", "male", .)`* who ascribes to *`r profiles %>% select(religion) %>% table() %>% table_max()`*.   
+  
+They have  *`r profiles %>% select(education) %>% table() %>% table_max()`*, are *`r profiles %>% select(age) %>% table() %>% table_max()`* years old, drink *`r profiles %>% select(drinks) %>% table() %>% table_max()`*, just say *`r profiles %>% select(drinks) %>% table() %>% table_max()`* to drugs, and have an *`r profiles %>% select(body_type) %>% table() %>% table_max()`* body type.   
+  
+They eat *`r profiles %>% select(diet) %>% table() %>% table_max()`*, live in *`r profiles %>% select(location) %>% table() %>% table_max()`*, and have a *`r profiles %>% select(orientation) %>% table() %>% table_max()`* sexual orientation.  
+   
+They earn *\$`r profiles %>% select(income) %>% table() %>% table_max()`* per year, speaks *`r profiles %>% select(speaks) %>% table() %>% table_max()`*, is a *`r profiles %>% select(sign) %>% table() %>% table_max()`*, and though *`r profiles %>% select(offspring) %>% table() %>% table_max()`* they *`r profiles %>% select(pets) %>% table() %>% table_max()`*
+
+(Apologies for the grammatical incongruences)
+
+Pretty boring? You bet!   
+Let's ask some more questions....
+
+### How many women use OkCupid?
 
 ```{r echo=TRUE, fig.align='center', fig.height=3,fig.width=9}
 ## clean data
@@ -74,6 +104,17 @@ The first thing to look at are the base behaviors and demographics of OkCupid us
             select(sex, age)
     ## make sex-data descriptive
     cleaned$sex<- cleaned$sex %>% gsub("m", "male", .) %>% gsub("f", "female", .)
+    
+    ## use these lines to compute age quantiles. 
+    age_data <- cleaned %>% select(age)
+    age_quantiles <- age_data$age %>% quantile(c(.25, 0.75, 0.95))
+    
+
+    male_summary <- cleaned %>% filter(sex == "male") %>% select(age)
+    male_deciles <- male_summary$age %>% quantile(c(.1, .5, .9, .95))
+        
+    female_summary <- cleaned %>% filter(sex == "female") %>% select(age)
+    female_deciles <- female_summary$age %>% quantile(c(.1, .5, .9, 0.95))
    
     
 ```
@@ -138,15 +179,17 @@ The first thing to look at are the base behaviors and demographics of OkCupid us
 
 ```
 
-Overall the number of men, `r n_males`, is about `r round(n_males/n_females, 1)` times greater than the number of females, `r n_females`. This ratio was carefully [not reported by OkCupid](https://blog.okcupid.com/index.php/the-case-for-an-older-woman/) in at least one analysis. There may be specificity of the geo-location of the data analyzed here ([San Francisco](http://visualizing.nyc/bay-area-zip-codes-singles-map/) only versus the larger OkCupid database as a whole). 
+Overall the number of men, `r n_males`, is about `r round(n_males/n_females, 1)` times greater than the number of females, `r n_females`. This ratio was carefully skirted in [this comparison by OkCupid](https://blog.okcupid.com/index.php/the-case-for-an-older-woman/). There may be specificity of the geo-location of the data analyzed here of being from ([San Francisco](http://visualizing.nyc/bay-area-zip-codes-singles-map/) only versus the larger OkCupid database as a whole). 
 
-A couple of notable features of the chart on the right are that the distributions peaks in the late 20's with a long tail. The number of men and women seems to equalize above out 50. There is also an apparent small "bulge" in the data near age 42, though it is not explored here.  
+A couple of notable features of the chart on the right are that the distributions peaks in the late 20's with a long tail.  
 
-Another way to look at the data to break age into groups. To do this I compute an age group factor and use `dplyr::group_by` to compute the necessary subtotals
+50% of the population lies between the ages of `r age_quantiles[1]` and `r age_quantiles[2]` years old. The long tail of the distribution is manifest in the quantiles of the distribution, with 95%  of the population being `r age_quantiles[3]` or younger (for men and women the 95th quantile is `r male_deciles[4]` years and `r female_deciles[4]` years, respectively). 
+
+Differences in the age distributions are apparent.
 
 ### How do age populations stack up?
 
-The above chart on the right is useful from a statistical distribution standpoint, but it's hard to draw comparisons. I found a stacked bar chart was visually appealing and useful and adopted this for the rest of hte analysis.
+The above chart on the right is useful from a statistical distribution standpoint, but it's hard to draw comparisons. Another way to look at the data to break age into groups. To do this I compute an age group factor and use `dplyr::group_by` to compute the necessary subtotals. A stacked bar chart was visually appealing and useful way to look at the comparison and so adopted it for this analysis.
 
 ```{r echo=TRUE, fig.align='center', fig.height=3,fig.width=7.5}
 ## Compute differences between male and female populations by age.
