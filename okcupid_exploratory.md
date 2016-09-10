@@ -54,38 +54,83 @@ Evidently the dataset is very rich. I explore a few individual female - male beh
 
 The first thing to look at are the base behaviors and demographics of OkCupid users. Since we'll be splitting everything into male and female subsets, lets first get a handle on the differences in the population based on age and sex.
 
-### What is the "Max Freq Hybrid" (MFH) of OkCupid?  
+### What is the "Mode Profile Hybrid" of OkCupid?  
 
-We can do an interesting thought-experiment by asking "what does is the composite of the most frequent value of each variable look like?" For short hand I'll call this the "Max Freq Hybird" or MFH.
+We can do an interesting thought-experiment by asking "what is the hybrid of the most frequent value of each variable?" For short hand I'll call this composite as the "Mode Profile Hybrid" or MPH.
 
-The value is easily computed with a helper function
+It's easliy computed using a helper function which, when passed a data frame and a column names, returns the row value corresponding the most frequencly occurring (mode) of that set.
 
 
-```r
-  table_max <- function(t) {
-        ## finds the name of the most common value in table
-        ## input: the result of a table() function call
-        ## returns: a character naming the most frequent value
-        ## note: has no error handling
-        b <- t %>% max()
-        names(t[t == max(t)]) %>% return
-  }
-```
 
-This "MFH" is (values in italics are computed) is an ethnically *white* *male* who ascribes to *agnosticism*.   
-  
-They have  *graduated from college/university*, are *26* years old, drink *socially*, just say *socially* to drugs, and have an *average* body type.   
-  
-They eat *mostly anything*, live in *san francisco, california*, and have a *straight* sexual orientation.  
-   
-They earn *\$20000* per year, speaks *english*, is a *gemini and it's fun to think about*, and though *doesn't have kids* they *likes dogs and likes cats*
 
-(Apologies for the grammatical incongruences)
 
-Pretty boring? You bet!   
-Let's ask some more questions....
 
-### How many women use OkCupid?
+<style>
+tr:hover {background-color: #FDF6E3}
+table { 
+    width: 74%;
+    display: table;
+    border-collapse: collapse;
+    border-spacing: 18px;
+    border-color: #111111;
+    background-color: #F3EACB;
+    padding: 2px;
+    font: 12px arial, sans-serif;
+}
+th, td{
+    text-align: center;
+}
+</style>
+
+
+
+####"MPH"
+
+The MPH of the entire data set is a male. For greater interest, I computed the MPH-male and MPH-female by filtering the profiles for each sex. 
+
+
+
+
+
+
+
+
+<table border="3" align="center" >
+<tr> <th> Factor </th> <th> male MPH </th> <th> female MPH </th>  </tr>
+  <tr> <td> age </td> <td> 26 </td> <td> 27 </td> </tr>
+  <tr> <td> body_type </td> <td> athletic </td> <td> average </td> </tr>
+  <tr> <td> diet </td> <td> mostly anything </td> <td> mostly anything </td> </tr>
+  <tr> <td> drinks </td> <td> socially </td> <td> socially </td> </tr>
+  <tr> <td> drugs </td> <td> never </td> <td> never </td> </tr>
+  <tr> <td> education </td> <td> graduated from college/university </td> <td> graduated from college/university </td> </tr>
+  <tr> <td> ethnicity </td> <td> white </td> <td> white </td> </tr>
+  <tr> <td> height </td> <td> 70 </td> <td> 70 </td> </tr>
+  <tr> <td> income </td> <td> 20000 </td> <td> 20000 </td> </tr>
+  <tr> <td> job </td> <td> computer / hardware / software </td> <td> student </td> </tr>
+  <tr> <td> last_online </td> <td> 2012-06-30 11:55:00 </td> <td> 2012-06-30 23:27:00 + others </td> </tr>
+  <tr> <td> location </td> <td> san francisco, california </td> <td> san francisco, california </td> </tr>
+  <tr> <td> offspring </td> <td> doesn't have kids </td> <td> doesn't have kids </td> </tr>
+  <tr> <td> orientation </td> <td> straight </td> <td> straight </td> </tr>
+  <tr> <td> pets </td> <td> likes dogs and likes cats </td> <td> likes dogs and likes cats </td> </tr>
+  <tr> <td> religion </td> <td> agnosticism and laughing about it </td> <td> agnosticism but not too serious about it </td> </tr>
+  <tr> <td> sex </td> <td> m </td> <td> m </td> </tr>
+  <tr> <td> sign </td> <td> virgo but it doesn't matter </td> <td> gemini and it's fun to think about </td> </tr>
+  <tr> <td> smokes </td> <td> no </td> <td> no </td> </tr>
+  <tr> <td> speaks </td> <td> english </td> <td> english </td> </tr>
+  <tr> <td> status </td> <td> single </td> <td> single </td> </tr>
+   </table>
+
+####Verbal descriptions of the MPH
+
+#####MALE
+The MPH-male of the OkCupid is a *white, straight, single, male,* who is *26* years old. He *graduated from college/university*, works in the *computer / hardware / software* industry, eats *mostly anything*, and is *5\' 10\"* tall. He drinks *socially* but *never* takes drugs. He lives in *San Franciscao*, *doesn't have kids* and *likes dogs and cats*. His astrological sign is *virgo but it doesn't matter* and is religiously *agnostic*. He  speaks only *english*. 
+
+(quantities in *italics* are computed.)
+
+#####FEMALE
+The most likely female user of the OkCupid is *white, straight, single, female,* who is *25* years old. She *graduated from college/university*, works in the eats *mostly anything*, and is *5\' 4\"* tall. She drinks *socially* but *never* takes drugs. She lives in *San Francisco*, *doesn't have kids* and *likes dogs and cats*. Her astrologic sign is *gemini and (she) has fun thinking about it*, is religiously *other*. She speaks only *english*. 
+
+### How many more men than women use OkCupid?
 
 
 ```r
@@ -110,11 +155,11 @@ Let's ask some more questions....
 ```
 
 
-<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-6-1.png" style="display: block; margin: auto;" />
+<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-11-1.png" style="display: block; margin: auto;" />
 
 
 
-Overall the number of men, 35680, is about 1.5 times greater than the number of females, 23955. This ratio was carefully skirted in [this comparison by OkCupid](https://blog.okcupid.com/index.php/the-case-for-an-older-woman/). There may be specificity of the geo-location of the data analyzed here of being from ([San Francisco](http://visualizing.nyc/bay-area-zip-codes-singles-map/) only versus the larger OkCupid database as a whole). 
+Overall the number of men, 35680, is about 1.5 times greater than the number of females, 23955. This ratio is difficult to find reference to. For instance [this comparison by OkCupid](https://blog.okcupid.com/index.php/the-case-for-an-older-woman/) preselect fixed number of men and women. The high male:female ratio may be specific to [San Francisco](http://visualizing.nyc/bay-area-zip-codes-singles-map/) versus the larger OkCupid database as a whole. 
 
 A couple of notable features of the chart on the right are that the distributions peaks in the late 20's with a long tail.  
 
@@ -168,7 +213,7 @@ This bar chart clearly shows the differences in age populations. Note that to ge
     print(p)
 ```
 
-<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-9-1.png" style="display: block; margin: auto;" />
+<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-14-1.png" style="display: block; margin: auto;" />
 
 
 The only problem is it is still hard to compare quantitatively the differences in the populations. 
@@ -183,7 +228,7 @@ The female to male ratio is easily calculated from $bias$ using
 $$\frac{f}{m} = \frac{1 + bias}{1 - bias}$$. 
 So, for $bias = -0.25$ the ratio of $f/m = 0.6$.
 
-<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-10-1.png" style="display: block; margin: auto;" />
+<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-15-1.png" style="display: block; margin: auto;" />
 
 What is remarkable about this graph is the story it tells. Realtive to women, male interest in online dating peaks in their late 20's, plateaus through their 40's, then declines until their 70's, where there is an apparent resurgence. It could be worth following up on that trend to see if it is substantiated by other data.
 
@@ -219,13 +264,13 @@ Both populations have a [gamma distribution-like shape](https://en.wikipedia.org
   
 
 
-<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-13-1.png" style="display: block; margin: auto;" />
+<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-18-1.png" style="display: block; margin: auto;" />
 
 Over 50% of the of the users of both sexes are between the ages of 22 and 34 (recall the bins in this case are four years wide), and between the ages of 34 and 50 the relative frequency of both men and women are the same. However, women users have a wider age range and a relatively greater population at older ages than men.  For women, those above age 50 women represent a higher proportion of the female population than men do for the male population.
   
 Again, a nice way to look at the data is to create the stacked bar chart below. 
 
-<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-14-1.png" style="display: block; margin: auto;" />
+<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-19-1.png" style="display: block; margin: auto;" />
 
 So, while the distribution differences between the male and populations are fairly subtle (~ a few percentage points), they have a profound impact on the age bias of the populations as seen above. 
 
@@ -261,7 +306,7 @@ The data are cleaned by filtering NA's and then grouped and counted as above. In
 
 Using the familiar bar chart some trends are obvious.
 
-<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-17-1.png" style="display: block; margin: auto;" />
+<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-22-1.png" style="display: block; margin: auto;" />
 
 The proportion of male users reporting an affiliation "atheism" and "agnosticism" is over 50%, with women beling slightly lower. Buddhism is about the same for both sexes, and of the major religions women outnumber men in all but Islam. 
 
@@ -281,7 +326,7 @@ profiles$drinks %>% unique
 
 After cleaning the `NA`'s from the data, we can use the now familiar bar chart to show there is little difference between men and women in drinking habits. 
 
-<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-19-1.png" style="display: block; margin: auto;" />
+<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-24-1.png" style="display: block; margin: auto;" />
 
 Clearly the large majority of OkCupid users are social drinkers, with men having a slightly greater tendency to drink "often" than do women.  
   
@@ -303,7 +348,7 @@ profiles$income %>% unique() %>% sort()
 
 
 
-<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-21-1.png" style="display: block; margin: auto;" />
+<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-26-1.png" style="display: block; margin: auto;" />
 
 Clearly women have lower incomes than me, with, for example a much larger percentage of women report an income of $20,000 than men. Men have higher representation incomes above $100,000.  
 
@@ -337,7 +382,7 @@ Indeed, since there are 218 unqiue categories, some reduction is needed.
   
 Since speed and simplicity are goals of this analysis, I stripped off everything except the first descriptor. This is a gross oversimplication of ethicity in an ever-more-diverse world, but it's a reasonable first approach to the analysis and results in tangible categories which can be compared to existing data. 
 
-<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-23-1.png" style="display: block; margin: auto;" />
+<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-28-1.png" style="display: block; margin: auto;" />
 
 In this anlaysis the majority of OkCupid users are found to be white, with small differences between the male and female populations of other ethnicities. The numbers above do not reflect [the demographics of San Francisco's population as a whole](https://en.wikipedia.org/wiki/San_Francisco), which is 48.5% White, 33% asian, 15% Hispanic, and 6% Black. 
 
@@ -397,7 +442,7 @@ The machinery above is easily adapted to exploring the relationship of drinking 
 
 In this case clear trends emerge which were masked in the basic analysis above. 
 
-<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-25-1.png" style="display: block; margin: auto;" />
+<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-30-1.png" style="display: block; margin: auto;" />
 
 
 
@@ -421,7 +466,7 @@ Thus, while men appear about twice as likely as women to drink heavily above age
 
 We get a better look at some of the more subtle trends in the data using a semi-log plot. Again, the age data has been bucketing into groups of five years.  
     
-<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-27-1.png" style="display: block; margin: auto;" />
+<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-32-1.png" style="display: block; margin: auto;" />
 
 
 
@@ -462,7 +507,7 @@ The data are cleaned by filtering NA's and then grouped and counted as above.
     cleaned$religious_affil <- gsub(' [A-z ]*', '', cleaned$religion) %>% as.factor()
 ```
 
-<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-29-1.png" style="display: block; margin: auto;" />
+<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-34-1.png" style="display: block; margin: auto;" />
 
 Some obvious patterns revela themselves. Social drinking is by far the largest category.  
 
@@ -483,7 +528,7 @@ For non-devout we select for _"not too serious"_ and _"laughing about it"_ prior
     cleaned <- filter(cleaned, grepl("not too serious", religion) | grepl("laughing about it", religion))
 ```
 
-<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-32-1.png" style="display: block; margin: auto;" />
+<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-37-1.png" style="display: block; margin: auto;" />
 
 
 In this case there is a fairly strong difference in the drinking behavior of those who are classified "devout" compared to those in the "non-devout" category.
@@ -494,18 +539,18 @@ In this case there is a fairly strong difference in the drinking behavior of tho
 Surprisingly, men and women greatly differ in religious affiliation, with approximately 45% of men reporting to be either atheist or agnostic versus 35% for women.
 
 
-<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-33-1.png" style="display: block; margin: auto;" />
+<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-38-1.png" style="display: block; margin: auto;" />
 
 ###Income and Drinking Habits
 
 
 
 
-<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-34-1.png" style="display: block; margin: auto;" />
+<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-39-1.png" style="display: block; margin: auto;" />
 
 The most obvious in the graph above is that social drinking, the largest component of the spectrum, shows an obvious trend, with social drinking peaking in the middle of the income range and decreasing on the edges. 
 
-<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-35-1.png" style="display: block; margin: auto;" />
+<img src="okcupid_exploratory_files/figure-html/unnamed-chunk-40-1.png" style="display: block; margin: auto;" />
 
 
 ## Some Conclusions  

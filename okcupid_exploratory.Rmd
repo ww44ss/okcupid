@@ -63,38 +63,139 @@ Evidently the dataset is very rich. I explore a few individual female - male beh
 
 The first thing to look at are the base behaviors and demographics of OkCupid users. Since we'll be splitting everything into male and female subsets, lets first get a handle on the differences in the population based on age and sex.
 
-### What is the "Max Freq Hybrid" (MFH) of OkCupid?  
+### What is the "Mode Profile Hybrid" of OkCupid?  
 
-We can do an interesting thought-experiment by asking "what does is the composite of the most frequent value of each variable look like?" For short hand I'll call this the "Max Freq Hybird" or MFH.
+We can do an interesting thought-experiment by asking "what is the hybrid of the most frequent value of each variable?" For short hand I'll call this composite as the "Mode Profile Hybrid" or MPH.
 
-The value is easily computed with a helper function
+It's easliy computed using a helper function which, when passed a data frame and a column names, returns the row value corresponding the most frequencly occurring (mode) of that set.
 
-```{r echo = TRUE}
+```{r echo = FALSE}
 
-  table_max <- function(t) {
-        ## finds the name of the most common value in table
-        ## input: the result of a table() function call
-        ## returns: a character naming the most frequent value
-        ## note: has no error handling
-        b <- t %>% max()
-        names(t[t == max(t)]) %>% return
-  }
+    max_freq <- function(col_name, df = profiles) {
+        ## grabs the value of the max freq occurence in dataframe columns
+        ## inputs: name: the name of a column and df: a dataframe
+        ## output: the max frequency occurence in the selected column
+        ##         more than one value may be returned
+        ##         if none if found, NA is returned
+        
+        if (col_name %in% names(df)) {
+            ## select the column. Note the use of "matches"
+            sel_col <- df %>% select(matches(col_name))
+        } else {
+            sel_col <- NULL
+        }
+        
+        col_table <- table(sel_col)
+        
+        if (length(col_table) >= 1) {
+            names(col_table[col_table == max(col_table)]) %>% return
+        } else {
+            NA %>% return
+        }
+        
+    }
+
 ```
 
-This "MFH" is (values in italics are computed) is an ethnically *`r profiles %>% select(ethnicity) %>% table() %>% table_max()`* *`r profiles %>% select(sex) %>% table() %>% table_max() %>% gsub("m", "male", .)`* who ascribes to *`r profiles %>% select(religion) %>% table() %>% table_max()`*.   
-  
-They have  *`r profiles %>% select(education) %>% table() %>% table_max()`*, are *`r profiles %>% select(age) %>% table() %>% table_max()`* years old, drink *`r profiles %>% select(drinks) %>% table() %>% table_max()`*, just say *`r profiles %>% select(drinks) %>% table() %>% table_max()`* to drugs, and have an *`r profiles %>% select(body_type) %>% table() %>% table_max()`* body type.   
-  
-They eat *`r profiles %>% select(diet) %>% table() %>% table_max()`*, live in *`r profiles %>% select(location) %>% table() %>% table_max()`*, and have a *`r profiles %>% select(orientation) %>% table() %>% table_max()`* sexual orientation.  
-   
-They earn *\$`r profiles %>% select(income) %>% table() %>% table_max()`* per year, speaks *`r profiles %>% select(speaks) %>% table() %>% table_max()`*, is a *`r profiles %>% select(sign) %>% table() %>% table_max()`*, and though *`r profiles %>% select(offspring) %>% table() %>% table_max()`* they *`r profiles %>% select(pets) %>% table() %>% table_max()`*
 
-(Apologies for the grammatical incongruences)
+```{r, echo = FALSE}
 
-Pretty boring? You bet!   
-Let's ask some more questions....
+    ## make MFP data frame
+    MFP <- data_frame("variable" = colnames(profiles), "MFP" = rep(NA, length(names(profiles))))
 
-### How many women use OkCupid?
+    profiles_m <- profiles %>% filter(sex == "m")
+    ## loop thru all variable names in the profile
+
+    ## loop thru all variable names in the profile
+    for (ii in 1:(names(profiles) %>% length)) {
+        
+        ## get the max feq value
+        m_f <- max_freq(MFP$variable[ii], profiles_m)
+        ## assign it, with some modest exception handling.
+        if (m_f %>% length > 1) {m_f <- paste0 (m_f[1] %>% as.character, " + others")}
+        MFP[ii, 2] <- m_f
+        
+    }
+
+MFP_m <- MFP
+
+```
+
+<style>
+tr:hover {background-color: #FDF6E3}
+table { 
+    width: 74%;
+    display: table;
+    border-collapse: collapse;
+    border-spacing: 18px;
+    border-color: #111111;
+    background-color: #F3EACB;
+    padding: 2px;
+    font: 12px arial, sans-serif;
+}
+th, td{
+    text-align: center;
+}
+</style>
+
+```{r results = 'asis', echo=FALSE}
+library(xtable)
+#print( xtable(MFP[-22,]), type="html", size="small", comment=FALSE, include.rownames=FALSE, html.table.attributes='border="3" align="center" ')
+
+```
+
+####"MPH"
+
+The MPH of the entire data set is a male. For greater interest, I computed the MPH-male and MPH-female by filtering the profiles for each sex. In the case of females I also filtered no-specific job roles of "other."
+
+
+```{r echo = FALSE}
+MFP <- data_frame("variable" = colnames(profiles), "MFP" = rep(NA, length(names(profiles))))
+
+    profiles_f <- profiles %>% filter(sex == "f")
+    profiles_f <- profiles %>% filter(job != "other")
+    ## loop thru all variable names in the profile
+    for (ii in 1:(names(profiles) %>% length)) {
+        
+        ## get the max feq value
+        m_f <- max_freq(MFP$variable[ii], profiles_f)
+        ## assign it, with some modest exception handling.
+        if (m_f %>% length > 1) {m_f <- paste0 (m_f[1] %>% as.character, " + others")}
+        MFP[ii, 2] <- m_f
+        
+MFP_f <- MFP
+        
+    }
+```
+
+```{r, echo = FALSE}
+
+MFP <- left_join(MFP_m, MFP_f, by="variable")
+colnames(MFP) <- c("Factor", "male MPH", "female MPH")
+
+```
+
+
+
+```{r results = 'asis', echo=FALSE}
+
+print( xtable(MFP[-22,]), type="html", size="small", comment=FALSE, include.rownames=FALSE, html.table.attributes='border="3" align="center" ')
+
+```
+
+####Verbal descriptions of the MPH
+
+These outcomes translate to an story (that is perhaps not all to surprising, but still interesting):
+
+(note that the quantities in *italics* are computed.)
+
+**The male MPH of the OkCupid** is a *white, straight, single, male,* who is *26* years old. He *graduated from college/university* and works in the *computer / hardware / software* industry. is body-type is *athletic* and is *5\' 10\"* tall. He eats *mostly anything*, drinks *socially*, but *never* takes drugs. He lives in *San Franciscao*, *doesn't have kids* and *likes dogs and cats*. His astrological sign is *virgo but it doesn't matter* and when asked about religion responds *agnosticism and laughing about it*. He speaks only *english*. 
+
+**The female MPH of the OkCupid** is a *white, straight, single, female,* who is *25* years old. She *graduated from college/university*, works as a *student*. er body type is *average* and is *5\' 4\"* tall. She eats *mostly anything*, drinks *socially*, but *never* takes drugs. She lives in *San Francisco*, *doesn't have kids* and *likes dogs and cats*. Her astrologic sign is *gemini and it’s fun to think about*, and when asked about religion respnds *agnosticism but not too serious about it*. She speaks only *english*. 
+
+This highlights both simliarities and differences in the data sets between men and women. Let's explore them further. 
+
+### How many more men than women use OkCupid?
 
 ```{r echo=TRUE, fig.align='center', fig.height=3,fig.width=9}
 ## clean data
@@ -179,7 +280,7 @@ Let's ask some more questions....
 
 ```
 
-Overall the number of men, `r n_males`, is about `r round(n_males/n_females, 1)` times greater than the number of females, `r n_females`. This ratio was carefully skirted in [this comparison by OkCupid](https://blog.okcupid.com/index.php/the-case-for-an-older-woman/). There may be specificity of the geo-location of the data analyzed here of being from ([San Francisco](http://visualizing.nyc/bay-area-zip-codes-singles-map/) only versus the larger OkCupid database as a whole). 
+Overall the number of men, `r n_males`, is about `r round(n_males/n_females, 1)` times greater than the number of females, `r n_females`. This ratio is difficult to find reference to. For instance [this comparison by OkCupid](https://blog.okcupid.com/index.php/the-case-for-an-older-woman/) preselect fixed number of men and women. The high male:female ratio may be specific to [San Francisco](http://visualizing.nyc/bay-area-zip-codes-singles-map/) versus the larger OkCupid database as a whole. 
 
 A couple of notable features of the chart on the right are that the distributions peaks in the late 20's with a long tail.  
 
