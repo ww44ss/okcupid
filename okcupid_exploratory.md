@@ -61,6 +61,31 @@ We can do an interesting thought-experiment by asking "what is the hybrid of the
 It's easliy computed using a helper function which, when passed a data frame and a column names, returns the row value corresponding the most frequencly occurring (mode) of that set.
 
 
+```r
+    max_freq <- function(col_name, df = profiles) {
+        ## grabs the value of the max freq occurence in dataframe columns
+        ## inputs: name: the name of a column and df: a dataframe
+        ## output: the max frequency occurence in the selected column
+        ##         more than one value may be returned
+        ##         if none if found, NA is returned
+        
+        if (col_name %in% names(df)) {
+            ## select the column. Note the use of "matches"
+            sel_col <- df %>% select(matches(col_name))
+        } else {
+            sel_col <- NULL
+        }
+        
+        col_table <- table(sel_col)
+        
+        if (length(col_table) >= 1) {
+            names(col_table[col_table == max(col_table)]) %>% return
+        } else {
+            NA %>% return
+        }
+        
+    }
+```
 
 
 
@@ -84,9 +109,7 @@ th, td{
 
 
 
-####"MPH"
-
-The MPH of the entire data set is a male. For greater interest, I computed the MPH-male and MPH-female by filtering the profiles for each sex. 
+The MPH of the entire data set is a male. For greater interest, I computed the MPH-male and MPH-female by filtering the profiles for each sex. In the case of females I also filtered no-specific job roles of "other."
 
 
 
@@ -104,31 +127,33 @@ The MPH of the entire data set is a male. For greater interest, I computed the M
   <tr> <td> drugs </td> <td> never </td> <td> never </td> </tr>
   <tr> <td> education </td> <td> graduated from college/university </td> <td> graduated from college/university </td> </tr>
   <tr> <td> ethnicity </td> <td> white </td> <td> white </td> </tr>
-  <tr> <td> height </td> <td> 70 </td> <td> 70 </td> </tr>
+  <tr> <td> height </td> <td> 70 </td> <td> 64 </td> </tr>
   <tr> <td> income </td> <td> 20000 </td> <td> 20000 </td> </tr>
-  <tr> <td> job </td> <td> computer / hardware / software </td> <td> student </td> </tr>
-  <tr> <td> last_online </td> <td> 2012-06-30 11:55:00 </td> <td> 2012-06-30 23:27:00 + others </td> </tr>
+  <tr> <td> job </td> <td> computer / hardware / software </td> <td> medicine / health </td> </tr>
+  <tr> <td> last_online </td> <td> 2012-06-30 11:55:00 </td> <td> 2012-06-29 22:42:00 + others </td> </tr>
   <tr> <td> location </td> <td> san francisco, california </td> <td> san francisco, california </td> </tr>
   <tr> <td> offspring </td> <td> doesn't have kids </td> <td> doesn't have kids </td> </tr>
   <tr> <td> orientation </td> <td> straight </td> <td> straight </td> </tr>
   <tr> <td> pets </td> <td> likes dogs and likes cats </td> <td> likes dogs and likes cats </td> </tr>
-  <tr> <td> religion </td> <td> agnosticism and laughing about it </td> <td> agnosticism but not too serious about it </td> </tr>
-  <tr> <td> sex </td> <td> m </td> <td> m </td> </tr>
+  <tr> <td> religion </td> <td> agnosticism and laughing about it </td> <td> other </td> </tr>
+  <tr> <td> sex </td> <td> m </td> <td> f </td> </tr>
   <tr> <td> sign </td> <td> virgo but it doesn't matter </td> <td> gemini and it's fun to think about </td> </tr>
   <tr> <td> smokes </td> <td> no </td> <td> no </td> </tr>
   <tr> <td> speaks </td> <td> english </td> <td> english </td> </tr>
   <tr> <td> status </td> <td> single </td> <td> single </td> </tr>
    </table>
+<br>
+#### Descriptions of the MPH's   
 
-####Verbal descriptions of the MPH
+These outcomes translate to a coherent story (that is perhaps not all too surprising, but still interesting):
 
-#####MALE
-The MPH-male of the OkCupid is a *white, straight, single, male,* who is *26* years old. He *graduated from college/university*, works in the *computer / hardware / software* industry, eats *mostly anything*, and is *5\' 10\"* tall. He drinks *socially* but *never* takes drugs. He lives in *San Franciscao*, *doesn't have kids* and *likes dogs and cats*. His astrological sign is *virgo but it doesn't matter* and is religiously *agnostic*. He  speaks only *english*. 
+(note that the quantities in *italics* are computed.)
 
-(quantities in *italics* are computed.)
+**The male MPH of the OkCupid** is a *white, straight, single, male,* who is *26* years old. He *graduated from college/university* and works in the *computer / hardware / software* industry. is body-type is *athletic* and is *5\' 10\"* tall. He eats *mostly anything*, drinks *socially*, but *never* takes drugs. He lives in *San Franciscao*, *doesn't have kids* and *likes dogs and cats*. His astrological sign is *virgo but it doesn't matter* and when asked about religion responds *agnosticism and laughing about it*. He speaks only *english*. 
 
-#####FEMALE
-The most likely female user of the OkCupid is *white, straight, single, female,* who is *25* years old. She *graduated from college/university*, works in the eats *mostly anything*, and is *5\' 4\"* tall. She drinks *socially* but *never* takes drugs. She lives in *San Francisco*, *doesn't have kids* and *likes dogs and cats*. Her astrologic sign is *gemini and (she) has fun thinking about it*, is religiously *other*. She speaks only *english*. 
+**The female MPH of the OkCupid** is a *white, straight, single, female,* who is *27* years old. She *graduated from college/university*, works in the *medicine / health* industry. Her body type is *average* and is *5\' 4\"* tall. She eats *mostly anything*, drinks *socially*, but *never* takes drugs. She lives in *San Francisco*, *doesn't have kids* and *likes dogs and cats*. Her astrologic sign is *gemini and it’s fun to think about*, and when asked about religion responds *other*. She speaks only *english*. 
+
+This highlights both simliarities and differences in the data sets between men and women. Let's explore them further. 
 
 ### How many more men than women use OkCupid?
 

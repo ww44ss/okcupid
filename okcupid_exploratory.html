@@ -157,6 +157,29 @@ profiles %&gt;% colnames</code></pre>
 <h3>What is the “Mode Profile Hybrid” of OkCupid?</h3>
 <p>We can do an interesting thought-experiment by asking “what is the hybrid of the most frequent value of each variable?” For short hand I’ll call this composite as the “Mode Profile Hybrid” or MPH.</p>
 <p>It’s easliy computed using a helper function which, when passed a data frame and a column names, returns the row value corresponding the most frequencly occurring (mode) of that set.</p>
+<pre class="r"><code>    max_freq &lt;- function(col_name, df = profiles) {
+        ## grabs the value of the max freq occurence in dataframe columns
+        ## inputs: name: the name of a column and df: a dataframe
+        ## output: the max frequency occurence in the selected column
+        ##         more than one value may be returned
+        ##         if none if found, NA is returned
+        
+        if (col_name %in% names(df)) {
+            ## select the column. Note the use of &quot;matches&quot;
+            sel_col &lt;- df %&gt;% select(matches(col_name))
+        } else {
+            sel_col &lt;- NULL
+        }
+        
+        col_table &lt;- table(sel_col)
+        
+        if (length(col_table) &gt;= 1) {
+            names(col_table[col_table == max(col_table)]) %&gt;% return
+        } else {
+            NA %&gt;% return
+        }
+        
+    }</code></pre>
 <style>
 tr:hover {background-color: #FDF6E3}
 table { 
@@ -173,9 +196,7 @@ th, td{
     text-align: center;
 }
 </style>
-<div id="mph" class="section level4">
-<h4>“MPH”</h4>
-<p>The MPH of the entire data set is a male. For greater interest, I computed the MPH-male and MPH-female by filtering the profiles for each sex.</p>
+<p>The MPH of the entire data set is a male. For greater interest, I computed the MPH-male and MPH-female by filtering the profiles for each sex. In the case of females I also filtered no-specific job roles of “other.”</p>
 <table border="3" align="center">
 <tr>
 <th>
@@ -273,7 +294,7 @@ height
 70
 </td>
 <td>
-70
+64
 </td>
 </tr>
 <tr>
@@ -295,7 +316,7 @@ job
 computer / hardware / software
 </td>
 <td>
-student
+medicine / health
 </td>
 </tr>
 <tr>
@@ -306,7 +327,7 @@ last_online
 2012-06-30 11:55:00
 </td>
 <td>
-2012-06-30 23:27:00 + others
+2012-06-29 22:42:00 + others
 </td>
 </tr>
 <tr>
@@ -361,7 +382,7 @@ religion
 agnosticism and laughing about it
 </td>
 <td>
-agnosticism but not too serious about it
+other
 </td>
 </tr>
 <tr>
@@ -372,7 +393,7 @@ sex
 m
 </td>
 <td>
-m
+f
 </td>
 </tr>
 <tr>
@@ -420,19 +441,12 @@ single
 </td>
 </tr>
 </table>
-</div>
-<div id="verbal-descriptions-of-the-mph" class="section level4">
-<h4>Verbal descriptions of the MPH</h4>
-<div id="male" class="section level5">
-<h5>MALE</h5>
-<p>The MPH-male of the OkCupid is a <em>white, straight, single, male,</em> who is <em>26</em> years old. He <em>graduated from college/university</em>, works in the <em>computer / hardware / software</em> industry, eats <em>mostly anything</em>, and is <em>5' 10&quot;</em> tall. He drinks <em>socially</em> but <em>never</em> takes drugs. He lives in <em>San Franciscao</em>, <em>doesn’t have kids</em> and <em>likes dogs and cats</em>. His astrological sign is <em>virgo but it doesn’t matter</em> and is religiously <em>agnostic</em>. He speaks only <em>english</em>.</p>
-<p>(quantities in <em>italics</em> are computed.)</p>
-</div>
-<div id="female" class="section level5">
-<h5>FEMALE</h5>
-<p>The most likely female user of the OkCupid is <em>white, straight, single, female,</em> who is <em>25</em> years old. She <em>graduated from college/university</em>, works in the eats <em>mostly anything</em>, and is <em>5' 4&quot;</em> tall. She drinks <em>socially</em> but <em>never</em> takes drugs. She lives in <em>San Francisco</em>, <em>doesn’t have kids</em> and <em>likes dogs and cats</em>. Her astrologic sign is <em>gemini and (she) has fun thinking about it</em>, is religiously <em>other</em>. She speaks only <em>english</em>.</p>
-</div>
-</div>
+<p><br> #### Descriptions of the MPH’s</p>
+<p>These outcomes translate to a coherent story (that is perhaps not all too surprising, but still interesting):</p>
+<p>(note that the quantities in <em>italics</em> are computed.)</p>
+<p><strong>The male MPH of the OkCupid</strong> is a <em>white, straight, single, male,</em> who is <em>26</em> years old. He <em>graduated from college/university</em> and works in the <em>computer / hardware / software</em> industry. is body-type is <em>athletic</em> and is <em>5' 10&quot;</em> tall. He eats <em>mostly anything</em>, drinks <em>socially</em>, but <em>never</em> takes drugs. He lives in <em>San Franciscao</em>, <em>doesn’t have kids</em> and <em>likes dogs and cats</em>. His astrological sign is <em>virgo but it doesn’t matter</em> and when asked about religion responds <em>agnosticism and laughing about it</em>. He speaks only <em>english</em>.</p>
+<p><strong>The female MPH of the OkCupid</strong> is a <em>white, straight, single, female,</em> who is <em>27</em> years old. She <em>graduated from college/university</em>, works in the <em>medicine / health</em> industry. Her body type is <em>average</em> and is <em>5' 4&quot;</em> tall. She eats <em>mostly anything</em>, drinks <em>socially</em>, but <em>never</em> takes drugs. She lives in <em>San Francisco</em>, <em>doesn’t have kids</em> and <em>likes dogs and cats</em>. Her astrologic sign is <em>gemini and it’s fun to think about</em>, and when asked about religion responds <em>other</em>. She speaks only <em>english</em>.</p>
+<p>This highlights both simliarities and differences in the data sets between men and women. Let’s explore them further.</p>
 </div>
 <div id="how-many-more-men-than-women-use-okcupid" class="section level3">
 <h3>How many more men than women use OkCupid?</h3>
