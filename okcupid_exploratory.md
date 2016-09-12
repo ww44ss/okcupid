@@ -53,7 +53,7 @@ Evidently the dataset is very rich. I explore a few individual female - male beh
 
 The first thing to look at are the base behaviors and demographics of OkCupid users. Since we'll be splitting everything into male and female subsets, lets first get a handle on the differences in the population based on age and sex.
 
-### What is the "Mode Profile Hybrid" of OkCupid?  
+### Who is the OkCupid "Mode Profile Hybrid" (MPH)?  
 
 We can do an interesting thought-experiment by asking "what is the hybrid of the most frequent value (i.e. mode) of each variable?" For short hand call this composite the "Mode Profile Hybrid" or MPH.
 
@@ -144,11 +144,10 @@ The MPH of the entire data set is a male. For greater interest, I computed the M
   <tr> <td> status </td> <td> single </td> <td> single </td> </tr>
    </table>
  
-###Who are the MPH's?  
+####Who are the MPH's?  
 
-These outcomes translate to a coherent story (that is perhaps not all too surprising, but still interesting):
+The above outcomes translate into a coherent story about the male and female MPHs.
 
-(note that the quantities in *italics* are computed.)
 
 **The male MPH on OkCupid** is a *white, straight, single, male,* who is *26* years old. He *graduated from college/university* and works in the *computer / hardware / software* industry. is body-type is *athletic* and is *5\' 10\"* tall. He eats *mostly anything*, drinks *socially*, but *never* takes drugs. He lives in *San Franciscao*, *doesn't have kids* and *likes dogs and cats*. His astrological sign is *virgo but it doesn't matter* and when asked about religion responds *agnosticism and laughing about it*. He speaks only *english*. 
 

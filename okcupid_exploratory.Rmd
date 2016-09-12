@@ -12,15 +12,13 @@ output:
 ##Summary  
 This explores several relationships in the OkCupid data recently [published on CRAN](https://cran.rstudio.com/web/packages/okcupiddata/index.html). Results explored in this document include the demographics of sex, age, income, religiosity, drinking, and ethnicity of OkCupid users and, as a specific analysis, the correlation of drinking habits to religiosity, income, sex and age.  
 
-Some key observations: 
-- The "most common" user is a 26 year old white male college graduate who drinks socially, is religiously agnostic, and who makes $20000 per year.
-- 50% of OkCupid users are between 26 and 37 years old.    
-- Less than 5% of OkCupid users are over 52 years old.
-- Men outnumber women 3:2 overall, though the ratio is stonrgly age dependent  
-- Women report a strong affilation to Judeo-Christian religions than do men.   
-- Over 50% of male OkCupid users identify as either athiestic or agnostic.  
-- Drinking habits of men and women are similar, with about 75% identifying as "social drinkers." 
-- The ethnic distribution of OkCUpid users skus heavily toward "white"
+Some key observations:   
+* The "most common" users is white, single, childless and in his or her late 20's.  
+* Less than 5% of OkCupid users are over 52 years old.
+* Overall, men outnumber women 3:2, though the ratio is strongly age dependent  
+* Over 50% of male OkCupid users identify as either athiestic or agnostic.  
+* Drinking habits of men and women are similar, with about 75% identifying as "social drinkers." 
+
 
 
 #Getting the Data
@@ -62,7 +60,7 @@ Evidently the dataset is very rich. I explore a few individual female - male beh
 
 The first thing to look at are the base behaviors and demographics of OkCupid users. Since we'll be splitting everything into male and female subsets, lets first get a handle on the differences in the population based on age and sex.
 
-### What is the "Mode Profile Hybrid" of OkCupid?  
+### Who is the OkCupid "Mode Profile Hybrid" (MPH)?  
 
 We can do an interesting thought-experiment by asking "what is the hybrid of the most frequent value (i.e. mode) of each variable?" For short hand call this composite the "Mode Profile Hybrid" or MPH.
 
@@ -183,11 +181,10 @@ print( xtable(MFP[-22,]), type="html", size="small", comment=FALSE, include.rown
 
 ```
  
-###Who are the MPH's?  
+####Who are the MPH's?  
 
-These outcomes translate to a coherent story (that is perhaps not all too surprising, but still interesting):
+The above outcomes translate into a coherent story about the male and female MPHs.
 
-(note that the quantities in *italics* are computed.)
 
 **The male MPH on OkCupid** is a *white, straight, single, male,* who is *26* years old. He *graduated from college/university* and works in the *computer / hardware / software* industry. is body-type is *athletic* and is *5\' 10\"* tall. He eats *mostly anything*, drinks *socially*, but *never* takes drugs. He lives in *San Franciscao*, *doesn't have kids* and *likes dogs and cats*. His astrological sign is *virgo but it doesn't matter* and when asked about religion responds *agnosticism and laughing about it*. He speaks only *english*. 
 

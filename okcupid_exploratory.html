@@ -152,8 +152,8 @@ profiles %&gt;% colnames</code></pre>
 <div id="behaviors-and-demographics" class="section level1">
 <h1>Behaviors and Demographics</h1>
 <p>The first thing to look at are the base behaviors and demographics of OkCupid users. Since we’ll be splitting everything into male and female subsets, lets first get a handle on the differences in the population based on age and sex.</p>
-<div id="what-is-the-mode-profile-hybrid-of-okcupid" class="section level3">
-<h3>What is the “Mode Profile Hybrid” of OkCupid?</h3>
+<div id="who-is-the-okcupid-mode-profile-hybrid-mph" class="section level3">
+<h3>Who is the OkCupid “Mode Profile Hybrid” (MPH)?</h3>
 <p>We can do an interesting thought-experiment by asking “what is the hybrid of the most frequent value (i.e. mode) of each variable?” For short hand call this composite the “Mode Profile Hybrid” or MPH.</p>
 <p>It’s easily computed using a helper function which, when passed a data frame and a column names, returns the row value corresponding the most frequencly occurring (mode) of that set.</p>
 <pre class="r"><code>    max_freq &lt;- function(col_name, df = profiles) {
@@ -442,15 +442,14 @@ single
 </td>
 </tr>
 </table>
-</div>
-<div id="who-are-the-mphs" class="section level3">
-<h3>Who are the MPH’s?</h3>
-<p>These outcomes translate to a coherent story (that is perhaps not all too surprising, but still interesting):</p>
-<p>(note that the quantities in <em>italics</em> are computed.)</p>
+<div id="who-are-the-mphs" class="section level4">
+<h4>Who are the MPH’s?</h4>
+<p>The above outcomes translate into a coherent story about the male and female MPHs.</p>
 <p><strong>The male MPH on OkCupid</strong> is a <em>white, straight, single, male,</em> who is <em>26</em> years old. He <em>graduated from college/university</em> and works in the <em>computer / hardware / software</em> industry. is body-type is <em>athletic</em> and is <em>5' 10&quot;</em> tall. He eats <em>mostly anything</em>, drinks <em>socially</em>, but <em>never</em> takes drugs. He lives in <em>San Franciscao</em>, <em>doesn’t have kids</em> and <em>likes dogs and cats</em>. His astrological sign is <em>virgo but it doesn’t matter</em> and when asked about religion responds <em>agnosticism and laughing about it</em>. He speaks only <em>english</em>.</p>
 <p><strong>The female MPH on OkCupid</strong> is a <em>white, straight, single, female,</em> who is <em>27</em> years old. She <em>graduated from college/university</em> and is a <em>student</em>. Her body type is <em>average</em> and is <em>5' 4&quot;</em> tall. She eats <em>mostly anything</em>, drinks <em>socially</em>, but <em>never</em> takes drugs. She lives in <em>San Francisco</em>, <em>doesn’t have kids</em> and <em>likes dogs and cats</em>. Her astrologic sign is <em>gemini and it’s fun to think about</em>, and when asked about religion responds <em>agnosticism</em>. She speaks only <em>english</em>.</p>
 <p>This highlights some interesting similarities and differences in the data sets between men and women.<br />
 * men and women express similar social drinking and eating habits. * men and women are childless, single, but like animals. * men and women are religiously agnostic. * most men think of themselves as athletic (as opposed to average) * women enjoy thinking about their astrological sign more than men do.</p>
+</div>
 </div>
 <div id="how-many-more-men-than-women-use-okcupid" class="section level3">
 <h3>How many more men than women use OkCupid?</h3>
