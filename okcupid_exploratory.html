@@ -140,7 +140,6 @@ $(document).ready(function () {
 library(okcupiddata)</code></pre>
 <p>and it consist of these data fields (detailed descriptions of which can be found in the reference above).</p>
 <pre class="r"><code>library(dplyr)
-
 ## column names
 profiles %&gt;% colnames</code></pre>
 <pre><code> [1] &quot;age&quot;         &quot;body_type&quot;   &quot;diet&quot;        &quot;drinks&quot;      &quot;drugs&quot;      
@@ -155,15 +154,15 @@ profiles %&gt;% colnames</code></pre>
 <p>The first thing to look at are the base behaviors and demographics of OkCupid users. Since we’ll be splitting everything into male and female subsets, lets first get a handle on the differences in the population based on age and sex.</p>
 <div id="what-is-the-mode-profile-hybrid-of-okcupid" class="section level3">
 <h3>What is the “Mode Profile Hybrid” of OkCupid?</h3>
-<p>We can do an interesting thought-experiment by asking “what is the hybrid of the most frequent value of each variable?” For short hand I’ll call this composite as the “Mode Profile Hybrid” or MPH.</p>
-<p>It’s easliy computed using a helper function which, when passed a data frame and a column names, returns the row value corresponding the most frequencly occurring (mode) of that set.</p>
+<p>We can do an interesting thought-experiment by asking “what is the hybrid of the most frequent value (i.e. mode) of each variable?” For short hand call this composite the “Mode Profile Hybrid” or MPH.</p>
+<p>It’s easily computed using a helper function which, when passed a data frame and a column names, returns the row value corresponding the most frequencly occurring (mode) of that set.</p>
 <pre class="r"><code>    max_freq &lt;- function(col_name, df = profiles) {
         ## grabs the value of the max freq occurence in dataframe columns
         ## inputs: name: the name of a column and df: a dataframe
         ## output: the max frequency occurence in the selected column
-        ##         more than one value may be returned
-        ##         if none if found, NA is returned
+        ##         more than one value may be returned, if none if found, NA is returned
         
+        ## select column
         if (col_name %in% names(df)) {
             ## select the column. Note the use of &quot;matches&quot;
             sel_col &lt;- df %&gt;% select(matches(col_name))
@@ -171,8 +170,10 @@ profiles %&gt;% colnames</code></pre>
             sel_col &lt;- NULL
         }
         
+        ## compute frequency table
         col_table &lt;- table(sel_col)
         
+        ## choose maximum frequency
         if (length(col_table) &gt;= 1) {
             names(col_table[col_table == max(col_table)]) %&gt;% return
         } else {
@@ -181,7 +182,7 @@ profiles %&gt;% colnames</code></pre>
         
     }</code></pre>
 <style>
-tr:hover {background-color: #FDF6E3}
+tr:hover {background-color: #FFE6D3}
 table { 
     width: 74%;
     display: table;
@@ -316,7 +317,7 @@ job
 computer / hardware / software
 </td>
 <td>
-medicine / health
+student
 </td>
 </tr>
 <tr>
@@ -327,7 +328,7 @@ last_online
 2012-06-30 11:55:00
 </td>
 <td>
-2012-06-29 22:42:00 + others
+2012-06-30 16:35:00
 </td>
 </tr>
 <tr>
@@ -382,7 +383,7 @@ religion
 agnosticism and laughing about it
 </td>
 <td>
-other
+agnosticism
 </td>
 </tr>
 <tr>
@@ -441,12 +442,15 @@ single
 </td>
 </tr>
 </table>
-<p><br> #### Descriptions of the MPH’s</p>
+</div>
+<div id="who-are-the-mphs" class="section level3">
+<h3>Who are the MPH’s?</h3>
 <p>These outcomes translate to a coherent story (that is perhaps not all too surprising, but still interesting):</p>
 <p>(note that the quantities in <em>italics</em> are computed.)</p>
-<p><strong>The male MPH of the OkCupid</strong> is a <em>white, straight, single, male,</em> who is <em>26</em> years old. He <em>graduated from college/university</em> and works in the <em>computer / hardware / software</em> industry. is body-type is <em>athletic</em> and is <em>5' 10&quot;</em> tall. He eats <em>mostly anything</em>, drinks <em>socially</em>, but <em>never</em> takes drugs. He lives in <em>San Franciscao</em>, <em>doesn’t have kids</em> and <em>likes dogs and cats</em>. His astrological sign is <em>virgo but it doesn’t matter</em> and when asked about religion responds <em>agnosticism and laughing about it</em>. He speaks only <em>english</em>.</p>
-<p><strong>The female MPH of the OkCupid</strong> is a <em>white, straight, single, female,</em> who is <em>27</em> years old. She <em>graduated from college/university</em>, works in the <em>medicine / health</em> industry. Her body type is <em>average</em> and is <em>5' 4&quot;</em> tall. She eats <em>mostly anything</em>, drinks <em>socially</em>, but <em>never</em> takes drugs. She lives in <em>San Francisco</em>, <em>doesn’t have kids</em> and <em>likes dogs and cats</em>. Her astrologic sign is <em>gemini and it’s fun to think about</em>, and when asked about religion responds <em>other</em>. She speaks only <em>english</em>.</p>
-<p>This highlights both simliarities and differences in the data sets between men and women. Let’s explore them further.</p>
+<p><strong>The male MPH on OkCupid</strong> is a <em>white, straight, single, male,</em> who is <em>26</em> years old. He <em>graduated from college/university</em> and works in the <em>computer / hardware / software</em> industry. is body-type is <em>athletic</em> and is <em>5' 10&quot;</em> tall. He eats <em>mostly anything</em>, drinks <em>socially</em>, but <em>never</em> takes drugs. He lives in <em>San Franciscao</em>, <em>doesn’t have kids</em> and <em>likes dogs and cats</em>. His astrological sign is <em>virgo but it doesn’t matter</em> and when asked about religion responds <em>agnosticism and laughing about it</em>. He speaks only <em>english</em>.</p>
+<p><strong>The female MPH on OkCupid</strong> is a <em>white, straight, single, female,</em> who is <em>27</em> years old. She <em>graduated from college/university</em> and is a <em>student</em>. Her body type is <em>average</em> and is <em>5' 4&quot;</em> tall. She eats <em>mostly anything</em>, drinks <em>socially</em>, but <em>never</em> takes drugs. She lives in <em>San Francisco</em>, <em>doesn’t have kids</em> and <em>likes dogs and cats</em>. Her astrologic sign is <em>gemini and it’s fun to think about</em>, and when asked about religion responds <em>agnosticism</em>. She speaks only <em>english</em>.</p>
+<p>This highlights some interesting similarities and differences in the data sets between men and women.<br />
+* men and women express similar social drinking and eating habits. * men and women are childless, single, but like animals. * men and women are religiously agnostic. * most men think of themselves as athletic (as opposed to average) * women enjoy thinking about their astrological sign more than men do.</p>
 </div>
 <div id="how-many-more-men-than-women-use-okcupid" class="section level3">
 <h3>How many more men than women use OkCupid?</h3>
