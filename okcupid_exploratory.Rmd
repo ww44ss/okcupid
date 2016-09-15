@@ -1,7 +1,7 @@
 ---
 title: "Exploratory Analysis of OkCupid dataset"
 author: "Winston Saunders"
-date: "August 27, 2016"
+date: "September 14, 2016"
 output: 
     html_document:
         css: markdown7.css
@@ -13,16 +13,15 @@ output:
 
 
 #Summary  
-This explores several relationships in the OkCupid data recently [published on CRAN](https://cran.rstudio.com/web/packages/okcupiddata/index.html). Results explored in this document include the demographics of sex, age, income, religiosity, drinking, and ethnicity of OkCupid users and, as a specific analysis, the correlation of drinking habits to religiosity, income, sex and age.  
+This explores several relationships in the OkCupid data [recently published on CRAN](https://cran.rstudio.com/web/packages/okcupiddata/index.html). Results explored in this document include the demographics of sex, age, income, religiosity, drinking, and ethnicity of OkCupid users and, as a specific analysis, the correlation of drinking habits to religiosity, income, sex and age.  
 
 Some key observations:   
-* The "most common" male and female users are white, single, childless and in their late 20's.  
-* 95% of OkCupid users are less than 52 years old.
-* Men outnumber women 3:2, though the ratio is strongly age dependent  
+* "Most" OkCupid users are white, single, childless, like pets, and are in their late 20's.  
+* 95% of users are less than 52 years old.   
+* Men outnumber women 3:2 overall, with strong age-dependencies.   
 * A majority of OkCupid users identify as religiously agnostic.  
-* About 75% identify "social drinkers." 
-* Drinking habits are strongly dependent on income levels.
-
+* Heavier drinking habits correlates strongly with higher incomes.   
+* Women's average income is about 75% that of men's.  
 
 #Getting the Data
 The OkCupid data is published on [CRAN](https://cran.rstudio.com/web/packages/okcupiddata/index.html) as a package for R users. The data set consists of user profile data for 59,946 San Francisco OkCupid users (a free online dating website) from June 2012. The data are describded in the paper: Albert Y. Kim, Adriana Escobedo-Land (2015). OkCupid Profile Data for Introductory Statistics and Data Science Courses. Journal of Statistics Education, 23(2), which you can find [here]( http://www.amstat.org/publications/jse/v23n2/kim.pdf)
@@ -57,8 +56,13 @@ library(dplyr)
 profiles %>% names
 ```
 
-The dataset is very rich with abundant oppty to explore. This quick tour first looks at a few individual female - male behavior trends (in the first section below), and then focuses on the correlation of drinking habits to some of these trends in the second section. 
+The dataset is very rich with abundant oppty to explore.  
 
+The data comprise:  
+* `r nrow(profiles)` observations.  
+* `r ncol(profiles)` variables.  
+
+This quick tour first looks at a few individual female - male behavior trends (in the first section below), and then focuses on the correlation of drinking habits to some of these trends in the second section. 
 
 # OkCupid "Modal Hybrid User" (MHU)?  
 
@@ -128,7 +132,7 @@ library(xtable)
 
 ```
 
-The MTH of the entire data set is a male. For greater interest, I computed `MTH_male` and `MTH_female` by filtering the profiles for each sex. To make it more interesting, when a category returned "other" those were also filtered.
+The MHU of the entire data set is a male. For greater interest, I computed `MHU_male` and `MHU_female` by filtering the profiles for each sex. To make it more interesting, when a category returned "other" those were also filtered.
 
 
 ```{r echo = FALSE}
@@ -172,12 +176,79 @@ a *white, straight, single, male,* who is *26* years old. He *graduated from col
 **The female MHU on OkCupid** is:  
 a *white, straight, single, female,* who is *27* years old. She *graduated from college/university* and is a *student*. Her body type is *average* and is *5\' 4\"* tall. She eats *mostly anything*, drinks *socially*, but *never* takes drugs. She lives in *San Francisco*, *doesn't have kids* and *likes dogs and cats*. Her astrologic sign is *gemini and it’s fun to think about*, and when asked about religion responds *agnosticism*. She speaks only *english*. 
 
-This highlights some interesting similarities and differences between male and female MHU's:  
+This suggests some interesting similarities and differences between male and female users:  
 * men and women express similar social drinking and eating habits.  
 * they are childless, single, but like pets.  
 * they are predominantly not religious.   
 * most men advertise themselves as athletic (as opposed to women, who are average).  
 * women enjoy thinking about their astrological signs more than men do.  
+
+We'll explore some of these below.  
+
+#Ethnicity of OkCupid users
+
+Ethnicity is reported as below is to0 complex for analysis.
+
+```{r, comment = "", echo = FALSE}
+set.seed(8765309)
+profiles$ethnicity %>% unique() %>% sample(7)
+```
+
+Indeed, since there are `r length(profiles$ethnicity %>% unique())` unqiue categories, some reduction is needed.  
+  
+To meet speed and simplicity goals, I stripped off everything except the first descriptor. This is a gross oversimplication of ethicity in an ever-more-diverse world, but it's a reasonable first approach. It results in tangible categories which can be compared to existing data. 
+
+```{r echo=FALSE, fig.align='center', fig.height=3,fig.width=7.5, message = FALSE}
+    ## clean data 
+    cleaned <- filter(profiles, !is.na(income), !is.na(ethnicity), !is.na(sex)) %>% as_data_frame
+    
+    ## concatenate some word types
+    cleaned$ethnicity <- gsub('middle eastern', 'middle_eastern', cleaned$ethnicity) 
+    cleaned$ethnicity <- gsub('pacific islander', 'pacific_islander', cleaned$ethnicity) 
+    cleaned$ethnicity <- gsub('native american', 'native_american', cleaned$ethnicity) 
+    cleaned$ethnicity <- gsub('hispanic \\/ latin', 'hispanic_latin', cleaned$ethnicity) 
+
+    ## strip everything after the first comma
+    cleaned$ethnicity <- gsub(',( [a-z_]*)', '', cleaned$ethnicity) %>% as.factor()
+    
+    ## change sex to descriptive names
+    cleaned$sex<- cleaned$sex %>% gsub("m", "male", .) %>% gsub("f", "female", .)
+    
+    cleaned$ethnicity <- cleaned$ethnicity %>% as.factor()
+    
+    
+    ## group the data 
+    
+    
+    ethnicity_count <- group_by(cleaned[,c("ethnicity", "sex")], ethnicity, sex) %>% summarize(group_count = n())
+    
+    sex_count <- group_by(cleaned[,c("sex")], sex) %>% summarize(sex_count = n())
+    
+    analyzed <- left_join(ethnicity_count, sex_count, by = "sex") %>% mutate(freq = group_count/sex_count, freq = ifelse(is.na(freq), 0, freq))
+    
+  
+    ## make color palette
+    n.color <- length(unique(analyzed$ethnicity))
+    getPalette = colorRampPalette(brewer.pal(6, "Dark2"))
+    
+    
+    ## plot the relative percentage of men and women per religion
+    p <- ggplot(analyzed, aes(x = sex, y = 100*freq, fill = ethnicity)) +
+        geom_bar(stat="identity") +
+        ggtitle("ethnicity of OkCupid users") + 
+        scale_fill_manual(values = getPalette(n.color)) + 
+        ylab("percent") + 
+        xlab("") +
+        coord_flip()+
+        theme(legend.position="bottom") +
+        guides(fill=guide_legend(nrow=2))
+        
+    
+    print(p)
+```
+
+A majority of OkCupid users are found to be white, with small differences between the male and female populations of other ethnicities. The numbers above do not reflect [the demographics of San Francisco's population as a whole](https://en.wikipedia.org/wiki/San_Francisco), which is 48.5% White, 33% asian, 15% Hispanic, and 6% Black. 
+
 
 # Male-Female Trends
 
@@ -185,7 +256,7 @@ The first thing to look at are  base behaviors and demographics of OkCupid users
 
 ##How many more men than women use OkCupid?
 
-This is a key question for any dating site. For instance in the [coverage of the Ashley Madison hack](http://www.businessinsider.com/ashley-madison-almost-no-women-2015-8) it was widely reported many more men than women used the site. How many more men than women use OkCupid?
+This is a key question for any dating site. For instance [coverage of the Ashley Madison hack](http://www.businessinsider.com/ashley-madison-almost-no-women-2015-8) it reported many more men than women used the site. How many more men than women use OkCupid?
 
 ```{r echo=TRUE, fig.align='center', fig.height=3,fig.width=9, tidy=TRUE}
 ## clean data
@@ -253,7 +324,7 @@ grid.arrange(sex_hist, age_graph, ncol=2)
 
 The number of men, `r n_males`, is about `r round(n_males/n_females, 2)` times greater than the number of females, `r n_females`. Its hard to find comparitive references elsewhere for this information. For instance [this analysis by OkCupid](https://blog.okcupid.com/index.php/the-case-for-an-older-woman/) preselect fixed number of men and women. 
 
-A couple of notable features of the chart on the right are that the distributions peaks in the late 20's with a long tail. 
+The sharp peaks in the late 20's and long tail extending thru age 70 are notable features of the graph on the right. 
 
 ```{r echo=TRUE, fig.align='center', fig.height=3,fig.width=9, tidy=TRUE}
     ## compute age quantiles. 
@@ -261,17 +332,17 @@ A couple of notable features of the chart on the right are that the distribution
     age_quantiles <- age_data$age %>% quantile(c(.25, 0.75, 0.95))
     
     male_summary <- cleaned %>% filter(sex == "male") %>% select(age)
-    male_deciles <- male_summary$age %>% quantile(c(.1, .5, .9, .95))
+    male_deciles <- male_summary$age %>% quantile(c(.25, .5, .75, .95))
         
     female_summary <- cleaned %>% filter(sex == "female") %>% select(age)
-    female_deciles <- female_summary$age %>% quantile(c(.1, .5, .9, 0.95))
+    female_deciles <- female_summary$age %>% quantile(c(.25, .5, .75, 0.95))
 ```
 
-50% of the population lies between the ages of `r age_quantiles[1]` and `r age_quantiles[2]` years old. The long tail implies 95% of the population is `r age_quantiles[3]` or younger (for men and women the 95th quantile is `r male_deciles[4]` years and `r female_deciles[4]` years, respectively). 
+For reference 50% of the population lies in the narrow range of ages between `r age_quantiles[1]` and `r age_quantiles[2]` years old. The long tail implies 95% of the population is `r age_quantiles[3]` or younger (for men and women the 95th quantile is `r male_deciles[4]` years and `r female_deciles[4]` years, respectively). 
 
 ## How do male and female ages stack up?
 
-The above chart on the right is useful, but it's hard to draw direct comparisons between male and female users ages. Another way to look is to compute an age group factor and use `dplyr::group_by` to compute the necessary subtotals. A stacked bar chart is a visually appealing and useful way to compare the results.
+The above charts are useful, but it's hard to draw direct comparisons between male and female users ages. Another way to look is to compute an age group factor and use `dplyr::group_by` to compute the necessary subtotals. A stacked bar chart is a visually appealing and useful way to compare the results.
 
 ```{r echo=TRUE, fig.align='center', fig.height=3,fig.width=7.5, tidy=TRUE}
 ## Compute differences between male and female populations by age.
@@ -314,11 +385,16 @@ This bar chart clearly shows the differences in age populations. To get around t
 
 ```
 
-Let's look deeper at the populations. 
+Some notable observations:   
+* Men outnumber women in most age groups.   
+* The ratio of men/women appears highest at younger ages.   
+* Above about age 50 the numbers of men and women seem to grow closer.   
+
+Let's take a closer look..
 
 ## Female-male bias by age 
 
-In this comparison, we express the difference as a relative, rather than absolute, number by computing a __bias__ 
+In this comparison, we compute the population difference as a relative, rather than absolute, number by computing a __bias__ 
 $$bias = \frac{f - m}{f + m}$$  
 where $f$ is the number of females and $m$ is the number of males in a given age group. This formulation has the representational advantage that at $+100\%$ the population is all female and at $-100\%$ the population is all male.  
   
@@ -347,110 +423,11 @@ print(p)
      
 ```
 
-Th graph tells an intersting story. Relative to women, male interest in online dating peaks in their late 20's, plateaus through their 30's, then declines steadily beyond the upper 40's. There is an apparent resurgence in at age 70, though the number of users in this age range `
+Th graph tells an intersting story. Relative to women, male interest in online dating peaks in the late 20's, plateaus in the 30's, then declines steadily beyond the upper 40's. There is an apparent resurgence in at age 70. 
 
-## Age distribution differences  
+ 
 
-We know the difference between men and women is not uniform with age. We can explore this a bit more by separating the male and females populations and normalizing them to the relevant number of each sex.  
-  
-The code to do this counting is shown below.
-
-```{r echo=TRUE, fig.align='center', fig.height=3,fig.width=7.5, tidy=TRUE}
-
-    library(dplyr)
-
-    ## put data into age groups using mutate
-    analyzed <- cleaned %>% mutate(age_group = 2 + 4 * floor(age/4))
-    analyzed$age_group <- analyzed$age_group %>% as.factor
-    
-    ## group_by data and summarize by sex and age
-    age_count <- group_by(analyzed[,c("age_group", "sex")], age_group, sex) %>% summarize(n_age = n())
-    ## count the total number of males and females
-    sex_count <- group_by(analyzed[,c("sex")], sex) %>% summarize(n_sex = n())
-    ## join the data
-    analyzed <- left_join(age_count, sex_count, by = "sex") %>% mutate(freq = n_age/n_sex, freq = ifelse(is.na(freq), 0, freq))
-```
-
-
-```{r echo=FALSE, fig.align='center', fig.height=3,fig.width=7.5}
-    
-    ## Generate Distribution and Cummulative Plots
-
-    ## distribution plot is straight forward
-    p_dist <- ggplot(analyzed, aes(x = age_group, y = 100*freq, fill = sex, group = sex)) +
-        geom_bar(stat = "identity", position = "dodge") +
-        #geom_bar(aes(fill = sex), position = "dodge") +
-        ggtitle("age distribution of sexes") +
-        scale_fill_manual(values = c("#DD9834", "#3498DD")) + 
-        ylab("percent of total per sex") + 
-        xlab("age_group")
-    
-    
-    ## Cummulative requires some manipuations
-    ## first make a "wide" data set
-    male <- analyzed %>% filter(sex == "male") %>% select(age_group, sex, freq)
-    female <- analyzed %>% filter(sex == "female") %>% select(age_group, sex, freq)
-
-    analyzed_wide <- inner_join(male, female, by = "age_group") %>% mutate(pop_diff = freq.x - freq.y)
-
-    ## compute cummulative sums
-
-    analyzed_wide2 <- analyzed_wide %>% as.data.frame %>% mutate(male_cummul = cumsum(freq.x), female_cummul = cumsum(freq.y))
-
-    ## plot the data
-    p_cummul <- ggplot(analyzed_wide2, aes(x = age_group, y = 100*male_cummul, group = sex.x)) +
-        geom_line(size = 1.5, color = "#3498DD") +
-        geom_line(aes(y = 100*female_cummul, group = sex.y), size = 1.5, color = "#DD9834") +
-        ylab("cummulative percent") +
-        xlab("age") +
-        ggtitle("cummulative distributions by age") 
-    
-
-
-```
-
-
-Both populations have a [gamma distribution-like shape](https://en.wikipedia.org/wiki/Gamma_distribution) with a mean near 28. The width of both distributions is about 12 years, though the women's distribution is slightly wider.  
-  
-
-```{r echo=FALSE, fig.align='center', fig.height=3,fig.width=7.5}
-grid.arrange(p_dist, p_cummul, ncol=2)
-```
-
-Between the ages of 34 and 50 the relative frequency of both men and women are the same. For women, those above age 50 women represent a higher proportion of the female population than men do for the male population.
-  
-A nice way to look at the data is to create the stacked bar chart below. 
-
-```{r echo=FALSE, fig.align='center', fig.height=3,fig.width=7.5}
-
-## Plot data
-
-    library(ggplot2)
-
-    ## build color palettes
-    n.color <- length(unique(analyzed$age_group))
-    getPalette = colorRampPalette(brewer.pal(6, "Dark2"))
-    
-    ## create plot
-    p <- ggplot(analyzed, aes(x = sex, y = 100*freq, fill = age_group)) +
-        geom_bar(stat="identity") +
-        ggtitle("OkCupid: age distribution of male and female users") + 
-        scale_fill_manual(values = getPalette(n.color)) + 
-        ylab("percent") + 
-        xlab("") +
-        coord_flip()+
-        theme(legend.position="bottom") +
-        guides(fill=guide_legend(nrow=2))
-        
-    
-    print(p)
-    
-    
-```
-
-While the distribution differences between the male and populations are fairly subtle (~ a few percentage points), they have a profound impact on the age bias of the populations as seen above. 
-
-# Male and Female Incomes Differences
+## Male and Female Incomes Differences
 
 Income data are reported as categorical variables as listed here:
 
@@ -514,31 +491,27 @@ p <- ggplot(cleaned, aes(x = age, y = income)) + geom_point()
 The medians of both men's and women's incomes are the same. But looking at the means  
 
 ```{r, results = 'asis'}
-## programming long chains of %>% are relatively straight forward, and can be read
-## more easily if formatted...
 
+## compute a table of mean incomes
+analyzed <- cleaned %>% group_by(sex) %>%
+                summarize(avg_income = (100 * ((income %>%
+                    as.character %>%
+                    as.integer %>%
+                    mean) %/% 100) %>% 
+                        as.integer))
 
-cleaned_x_print <- cleaned %>% group_by(sex) %>%
+x_print <- analyzed %>% xtable 
     
-    summarize(avg_income = (100 * ((income %>%
-                  as.character %>%
-                  as.integer %>%
-                  mean) %/% 100) %>% 
-                      as.integer)) %>% 
-
-    xtable 
-    
-cleaned_x_print  %>%
+x_print  %>%
     print(type = "html", comment = FALSE, include.rownames = FALSE)
 
 ```    
 
-  
-Shows women have about
+The table shows the ratio of men's and women's mean incomes is `r 100* ((analyzed$avg_income[1]/analyzed$avg_income[2]) %>% round(2))`%, which is [consistent with other findings](http://www.iwpr.org/initiatives/pay-equity-and-discrimination). Given the young and progressive OkCupid population, the result is both surprising and a little disappointing.  
 
 # Religious affilation of OkCupid Users
 
-The religion data contains statements of what I will call 'affiliation' and 'devoutness.'  For example, here is a sample of the data.
+The religion data contains statements of both 'affiliation' and 'devoutness.'  For example, here is a sample of the data.
 
 ```{r, comment = ""}
 set.seed(8675309)
@@ -547,7 +520,7 @@ sample(unique(profiles$religion), 4)
 
 There is an affiliation with a base religion and then a statement of how serious (devout) one is about it. 
 
-For a macro view of demographics, let's first strip off the devoutness descriptors to focus on affilation (so, for instance, whether someone typed _"catholicism and somewhat serious about it"_, or _"catholicism and very serious about it"_, they are affiliated as _"catholicism"_) 
+For a macro view of demographics, let's first strip off the devoutness and focus on affilation (so, for instance, whether someone typed _"catholicism and somewhat serious about it"_, or _"catholicism and very serious about it"_, they are affiliated with _"catholicism"_) 
   
 The data are cleaned by filtering NA's and then grouped and counted as above. In this case I choose to eliminate the affilation "other" since it is not specific enough to facilitate comparison.  
 
@@ -679,10 +652,10 @@ However, recall that over 50% of OkCupid users are in a very narrow age range. B
 
 ## Drinking habits with age
 
-The machinery above is easily adapted to exploring the relationship of drinking and age. Just to illustrate it I add the code below.  
+The machinery above is easily adapted to exploring the relationship of drinking and age. 
 
 
-```{r echo=TRUE, fig.align='center', fig.height=5,fig.width=7.5, message = FALSE, tidy=TRUE}
+```{r echo=FALSE, fig.align='center', fig.height=5,fig.width=7.5, message = FALSE, tidy=TRUE}
     
     ## Clean Data
     ## eliminate NA's
@@ -730,7 +703,7 @@ The machinery above is easily adapted to exploring the relationship of drinking 
     
 ```
 
-In this case clear trends emerge which were masked in the basic analysis above. 
+In this case trends emerge which were masked in the basic analysis above. 
 
 ```{r echo=FALSE, fig.align='center', fig.height=5,fig.width=7.5, message = FALSE}
   print(p)
@@ -738,10 +711,9 @@ In this case clear trends emerge which were masked in the basic analysis above.
 ```
 
 
+A pronounced tendency toward lighter drinking in older age is apparent. 
 
-There is a pronounced tendency toward lighter drinking in older age. 
-
-These findings are consistent with, for instance, results [results published by _Annie Britton, Yoav Ben-Shlomo, Michaela Benzeval, Diana Kuh and Steven Bell_](http://bmcmedicine.biomedcentral.com/articles/10.1186/s12916-015-0273-z), who report also that drinking tends to decrease with increasing age. 
+These findings are consistent with, for instance, [results published by _Annie Britton, Yoav Ben-Shlomo, Michaela Benzeval, Diana Kuh and Steven Bell_](http://bmcmedicine.biomedcentral.com/articles/10.1186/s12916-015-0273-z), who report also that drinking tends to decrease with increasing age. 
 
 ```{r echo = FALSE}
 male_often_over_60 <- analyzed %>% filter(age_range >= 52.5, sex == "male", drinks == "often") %>% ungroup() %>% summarize(sum(n))
@@ -761,10 +733,9 @@ but with an uncertainty from random error (so-called "counting statistics") of
 
 $$ \sigma = \sqrt{\frac{1}{"drinks\ often"\ males\ over\ 50} + \frac{1}{"drinks\ often"\ females\ over\ 50} } = `r 100*sqrt(1/male_often_over_60 + 1/female_often_over_60) %>% round(2)` \% $$
 
+While this is a substantial error margin, the finding appears to be just on the border of $3 \sigma$ confidence levels, suggesting more detailed analysis is needed.   
 
-Thus, while men appear about twice as likely as women to drink heavily above age 50, the result is not extremely high confidence. 
-
-We get a better look at some of the more subtle trends in the data using a semi-log plot. Again, the age data has been bucketing into groups of five years.  
+We get a better look at some of the more subtle trends in the data using a semi-log plot. For this the age data has been bucketing into groups of ten years.  
     
 ```{r echo=FALSE, fig.align='center', fig.height=4,fig.width=6.5, message = FALSE}   
 ## clean data into broad category
@@ -784,7 +755,7 @@ We get a better look at some of the more subtle trends in the data using a semi-
         #geom_violin(alpha = 0.3, size = 1, fill = "#FF9933", color = "darkred") + 
         #ggtitle("okcupid: drinks versus age") + facet_grid(sex~.)
     
-    cleaned <- mutate(cleaned, age_range = 2.5 + 5 * age %/% 5 )
+    cleaned <- mutate(cleaned, age_range = 5 + 10 * age %/% 10 )
     
     drinks_and_sex <- group_by(cleaned, age_range, sex, drinks) %>% summarize(n=n())
     
@@ -806,10 +777,14 @@ We get a better look at some of the more subtle trends in the data using a semi-
     
 ```  
 
+Some observations:   
+* social drinking is the most frequent category at all ages.  
+* abstinence _increases_ by about a factor of three between age 21 and age 70.  
+* heavy drinking _decreases_ by a factor of about five between ages 21 and 70.  
 
 ##Drinking Habits and Income
 
-
+This analysis shows some of the most interesting trends. Since we have seen drinking habbits and incomes of men and women differ, let's look at the data normalized to both sex and income.
 
 ```{r echo = FALSE, fig.align = 'center', fig.height = 4 , fig.width = 7.5 , message = FALSE}
  
@@ -830,7 +805,7 @@ We get a better look at some of the more subtle trends in the data using a semi-
     ## group the data 
     income_and_drinks <- group_by(cleaned[,c("drinks", "sex", "income")], drinks, sex, income) %>% summarize(n = n())
     
-    income <- group_by(cleaned[,c("drinks", "income", "sex")], income) %>% summarize(NN = n())
+    income <- group_by(cleaned[,c("drinks", "income", "sex")], income, sex) %>% summarize(NN = n())
     
   
     analyzed <- left_join(income_and_drinks, income) %>% mutate(freq = n/NN, freq = ifelse(is.na(freq), 0, freq))
@@ -847,7 +822,7 @@ We get a better look at some of the more subtle trends in the data using a semi-
                                                             "very often",
                                                             "desperately"))
     
-    n.color <- length(unique(analyzed$income))
+    n.color <- length(unique(analyzed$drinks))
     getPalette = colorRampPalette(brewer.pal(6, "Dark2"))
     
     p <- ggplot(analyzed, aes(income, weight = 100*freq)) +
@@ -865,7 +840,14 @@ We get a better look at some of the more subtle trends in the data using a semi-
     
 ```    
 
-The most obvious in the graph above is that social drinking, the largest component of the spectrum, shows an obvious trend, with social drinking peaking in the middle of the income range and decreasing on the edges. 
+The most obvious in the graph above is that social drinking, the largest component of the spectrum, shows an obvious trend, with social drinking peaking in the middle of the income range and decreasing on the edges.  
+
+Some other observations:  
+* rare of no drinking decreases with increasing income.  
+* drinking often tends to be lower in the "middle" of the graph.  
+* heavy drinking increases with income.  
+  
+We can get a better look with the graph below.  
 
 ```{r echo = FALSE, fig.align = 'center', fig.height = 3 , fig.width = 7.5 , message = FALSE}
 
@@ -880,6 +862,9 @@ The most obvious in the graph above is that social drinking, the largest compone
 
 ```
 
+Some observations:  
+* The decrase in abstinence is apparent.  
+* Desperate drinking increase with age for both men and women. 
 
 ## Drinking and Religion
 The data `religion` contains statements of both 'affiliation' and (what I call) 'devoutness'. For example
@@ -950,81 +935,25 @@ The data are cleaned by filtering NA's and then grouped and counted.
     print(p)
 ```
 
-Some obvious patterns reveal themselves. 
-* Social drinking is by far the largest category.
-* Athesists and agnostics are the heaviest drinkers 
-* Islamic males also have a higher frequency of heavy drinking.
-* Jewish people have the lowest rate of abstinence.
+Some patterns reveal themselves.   
+* Social drinking is by far the largest category.   
+* Athesists and agnostics are the heaviest drinkers.      
+* Islamic males also have a higher frequency of heavy drinking.    
+* Jewish people have the lowest rate of abstinence.     
 
 
+
+
+# Some Conclusions  
+
+Generally the OkCupid data reflects many trends in the general population, such as drinking habit and income disparities. Other trends, such as ethnicity, diverge from the more general demongraphics.  
+
+The data present an interesting oppty for more analysis. It would be interesting to:   
+* Dig deeper on the discrepancies of income based on ethnicity and age.   
+* Develop a cleaner statistical analysis of drinking habits with age.   
+* See what modeling opportunities the data present.   
   
-
-#Ethnicity of OkCupid users
-
-Ethnicity is reported as below is to complex for analysis.
-
-```{r, comment = "", echo = FALSE}
-set.seed(8765309)
-profiles$ethnicity %>% unique() %>% sample(3)
-```
-
-Indeed, since there are `r length(profiles$ethnicity %>% unique())` unqiue categories, some reduction is needed.  
-  
-To meet speed and simplicity goals, I stripped off everything except the first descriptor. This is a gross oversimplication of ethicity in an ever-more-diverse world, but it's a reasonable first approach. It results in tangible categories which can be compared to existing data. 
-
-```{r echo=FALSE, fig.align='center', fig.height=3,fig.width=7.5, message = FALSE}
-    ## clean data 
-    cleaned <- filter(profiles, !is.na(income), !is.na(ethnicity), !is.na(sex)) %>% as_data_frame
-    
-    ## concatenate some word types
-    cleaned$ethnicity <- gsub('middle eastern', 'middle_eastern', cleaned$ethnicity) 
-    cleaned$ethnicity <- gsub('pacific islander', 'pacific_islander', cleaned$ethnicity) 
-    cleaned$ethnicity <- gsub('native american', 'native_american', cleaned$ethnicity) 
-    cleaned$ethnicity <- gsub('hispanic \\/ latin', 'hispanic_latin', cleaned$ethnicity) 
-
-    ## strip everything after the first comma
-    cleaned$ethnicity <- gsub(',( [a-z_]*)', '', cleaned$ethnicity) %>% as.factor()
-    
-    ## change sex to descriptive names
-    cleaned$sex<- cleaned$sex %>% gsub("m", "male", .) %>% gsub("f", "female", .)
-    
-    cleaned$ethnicity <- cleaned$ethnicity %>% as.factor()
-    
-    
-    ## group the data 
-    
-    
-    ethnicity_count <- group_by(cleaned[,c("ethnicity", "sex")], ethnicity, sex) %>% summarize(group_count = n())
-    
-    sex_count <- group_by(cleaned[,c("sex")], sex) %>% summarize(sex_count = n())
-    
-    analyzed <- left_join(ethnicity_count, sex_count, by = "sex") %>% mutate(freq = group_count/sex_count, freq = ifelse(is.na(freq), 0, freq))
-    
-  
-    ## make color palette
-    n.color <- length(unique(analyzed$ethnicity))
-    getPalette = colorRampPalette(brewer.pal(6, "Dark2"))
-    
-    
-    ## plot the relative percentage of men and women per religion
-    p <- ggplot(analyzed, aes(x = sex, y = 100*freq, fill = ethnicity)) +
-        geom_bar(stat="identity") +
-        ggtitle("ethnicity of OkCupid users") + 
-        scale_fill_manual(values = getPalette(n.color)) + 
-        ylab("percent") + 
-        xlab("") +
-        coord_flip()+
-        theme(legend.position="bottom") +
-        guides(fill=guide_legend(nrow=2))
-        
-    
-    print(p)
-```
-
-A majority of OkCupid users are found to be white, with small differences between the male and female populations of other ethnicities. The numbers above do not reflect [the demographics of San Francisco's population as a whole](https://en.wikipedia.org/wiki/San_Francisco), which is 48.5% White, 33% asian, 15% Hispanic, and 6% Black. 
-
-
-## Some Conclusions  
+> Thanks to the authors for publishing this interesting data set!
 
 
 
