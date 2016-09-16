@@ -1,30 +1,255 @@
 ---
-title: "OkCupidAsIncomePredictor"
+title: "OkCUpid income predictor"
 author: "Winston Saunders"
 date: "September 15, 2016"
-output: html_document
+output: 
+    html_document:
+        css: markdown7.css
+        toc: true
+        toc_depth: 3
+        keep_md: true
+
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE, fig.width=7, fig.height=4.5, messages=FALSE, warning = FALSE, fig.align = 'center')
+
+options(scipen=999)
 ```
 
-## R Markdown
+```{r, message=FALSE, warning=FALSE}
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+library(dplyr)
+library(ggplot2)
+library(RColorBrewer)
+library(gridExtra)
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+library(okcupiddata)
+library(randomForest)
+library(gbm)
 
-```{r cars}
-summary(cars)
 ```
 
-## Including Plots
+# Introduction
 
-You can also embed plots, for example:
+Privacy is a concern to everyone. But, in this era of machine-learning and data analytics, how does one go about protecting our digital-privacy?   
+  
+We're intuitively familiar with physical privacy. In the context of taking a shower we might step back from an open door to conceal a brief compromise of privacy. And we know to close the door to ensure complete and permanent privacy. Through simple acts we control what others may see or learn, and it is the act of control over information that constitutes an active definition of privacy.
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+With widespread use of predictive analytics, our privacy faces greater threats. Specifically, our intuition fails us in deciding what active steps we can take to protect information we want held as private; control is not as simple as just closing a door. 
+  
+Many cases have been popularized, such as the case of [Target knowing a girl was pregnant before her father did](http://www.forbes.com/sites/kashmirhill/2012/02/16/how-target-figured-out-a-teen-girl-was-pregnant-before-her-father-did/#791d11a134c6). These tell about the consequences of a loss of privacy, but little to do with what information is being used to take it away.  
+
+The purpose here is to use demographic data from the recently published [OkCupid package on CRAN](https://cran.r-project.org/web/packages/okcupiddata/index.html) to model specific "private" information about users and understand how ancillary data disclosed the database may contribute to what constitutes an attack on user privacy. While this is purely hypothetical, my hope is that lessons learned in this exercise will help us all to develop greater intuition about what constitutes "closing the door" when it comes to protecting our digital-privacy.
+
+# Problem Statement
+
+Our incomes and ages are among our most private information. But how privately do we hold this? Can a "trained" machine, not actually knowing my age, for example, but knowing other things about me, invade my privacy and infer it? What specific demographic data plays a role in the accuracy of this inference?  
+
+# Data Treatment
+
+The data from OkCupid are downloaded from the published package. For simplicity, the columns on `essay0`, (zodiac) `sign`, and `last_online` are dropped.  
+Data are cleaned and simplified for modeling in the following way:  
+* rows with NA in age or income are dropped.  
+* variables are convereted to factors.  
+* education is simplified to include only the first word of the description (this could be improved with some more work) `education_simplified`.
+* ethnicity is simplified to the first descriptor only. 
+* religion is simplified to the first descriptor only `religious_affil`
+* a `log_income` is computed. 
+
+```{r, message=FALSE, warning=FALSE}
+colnames(profiles)
+
+cleaned <- profiles %>% select(-essay0, -last_online, -sign)
+cleaned <- cleaned %>% filter(!is.na(income))
+cleaned <- cleaned %>% filter(!is.na(age))
+
+
+cleaned <- cleaned %>% as_data_frame
+
+## straighten into factors
+cleaned$body_type <- cleaned$body_type  %>% as.factor
+cleaned$diet <- cleaned$diet %>% as.factor
+cleaned$drinks <- cleaned$drinks %>% as.factor
+cleaned$education <- cleaned$education %>% as.factor
+        cleaned <- cleaned %>% mutate(education_simple = gsub(' [A-z /\\-\\.]*', '', education)) 
+        cleaned$education_simple <- cleaned$education_simple %>% as.character %>% as.factor
+
+cleaned$ethnicity <- cleaned$ethnicity %>% as.factor
+    cleaned$ethnicity <- gsub(',( [a-z_]*)', '', cleaned$ethnicity) %>% as.factor()
+
+cleaned$location <- cleaned$location %>% as.factor
+cleaned$height <- cleaned$height %>% as.factor
+cleaned$income <- cleaned$income %>% as.character %>% as.numeric
+    cleaned <- cleaned %>% mutate(log_income = log10(income))
+cleaned$job <- cleaned$job %>% as.factor
+cleaned$offspring <- cleaned$offspring %>% as.factor
+cleaned$orientation <- cleaned$orientation %>% as.factor
+cleaned$pets <- cleaned$pets %>% as.factor
+cleaned$religion <- cleaned$religion %>% as.factor
+    cleaned <- cleaned %>% mutate(religious_affil = gsub(' [A-z ]*', '', religion))
+    cleaned$religious_affil <- cleaned$religious_affil %>% as.factor
+
+cleaned$sex <- cleaned$sex %>% as.factor
+cleaned$smokes <- cleaned$smokes %>% as.factor
+cleaned$status <- cleaned$status %>% as.factor
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+## Predicted Income
+
+A model to give decent predictability takes a little work. Here I modeled based on the parameters listed below. 
+
+```{r, echo=FALSE, warning = FALSE, fig.align='center', tidy = TRUE, comment=""}
+    ## select variables
+    cleaned_sel <- cleaned %>% select(log_income, sex, drinks, religious_affil, education_simple, age, job, height) #drop ethnicity and offspring
+
+    print(c("cleaned before complete cases", nrow(cleaned_sel)))
+    cleaned_sel <- cleaned_sel[complete.cases(cleaned_sel),]
+    print(c("cleaned after complete cases", nrow(cleaned_sel)))
+    
+    ## reduce span of incomes
+    cleaned_sel <- cleaned_sel %>% filter(log_income < log10(200010))
+    cleaned_sel <- cleaned_sel %>% filter(log_income > log10(20010))
+    
+
+    cleaned_sel <- cleaned_sel %>% as_data_frame
+    
+    cleaned_sel %>% colnames
+```
+
+The data are split into __training__ and __test__ data sets using a well known methods. Here is a snapshot of the training data. 
+
+```{r, echo=1:7, warning = FALSE, fig.align='center', tidy = TRUE, comment=""}
+    # split data into training and test data sets
+    set.seed(8675309)
+    data_cut <- sample(1: nrow(cleaned_sel), 0.6*nrow(cleaned_sel))
+
+
+    train_data <- cleaned_sel[data_cut,] 
+    test_data <- cleaned_sel[-data_cut,]
+
+    train_data
+```
+
+
+```{r, echo=1:7, warning = FALSE, fig.align='center', tidy = TRUE}
+    
+    model.start <- Sys.time()
+    income_model <- randomForest(log_income ~., train_data, importance = TRUE, ntree = 300)
+    model.time <- Sys.time()-model.start
+    
+    grounded.truth <- test_data$log_income
+
+    model.output <- predict(income_model, test_data %>% select(-log_income))
+
+```
+Overll it took `r model.time` seconds to model `r nrow(train_data)` points. The model importance is shown below.   
+
+```{r, echo=FALSE, warning = FALSE, fig.align='center', tidy = TRUE}
+
+    # sort model importance
+    importance(income_model, type=1)
+
+    plot_df <- cbind(grounded.truth, model.output) %>% as_data_frame
+    plot_df$sample <- 1:nrow(plot_df)
+
+    log_breaks = c(20000, 30000, 40000, 50000, 70000, 80000, 100000, 150000, 200000, 500000, 1000000)
+
+    ggplot(plot_df, aes(y = 10^model.output, x = 10^grounded.truth, group=grounded.truth)) + 
+        geom_boxplot(fill = "#CCCCCC")+
+        #geom_boxplot() + 
+        geom_jitter(pch=21, fill = "#77EE11", color = "#7788EE", width = .06, size = 0.8) +
+        scale_y_log10(breaks = log_breaks, labels=log_breaks) + 
+        scale_x_log10(breaks = log_breaks, labels=log_breaks) + 
+        ggtitle("OkCupid income model") +
+        xlab("actual income") + 
+        ylab("inferred income") +
+        geom_smooth()
+
+
+
+```
+
+##gbm
+
+```{r, echo=1:7, warning = FALSE, fig.align='center', tidy = TRUE}
+    
+    model.start <- Sys.time()
+    income_model <- gbm(log_income ~ sex + drinks + religious_affil + education_simple + age + job + height, data = train_data, n.trees = 100, shrinkage = 0.01)
+    model.time <- Sys.time()-model.start
+    
+    grounded.truth <- test_data$log_income
+
+    model.output <- predict(income_model, test_data %>% select(-log_income), n.trees = 100)
+
+```
+Overll it took `r model.time` seconds to model `r nrow(train_data)` points. The model importance is shown below.   
+
+```{r, echo=FALSE, warning = FALSE, fig.align='center', tidy = TRUE}
+
+    # sort model importance
+    income_model
+
+    plot_df <- cbind(grounded.truth, model.output) %>% as_data_frame
+    plot_df$sample <- 1:nrow(plot_df)
+
+    log_breaks = c(20000, 30000, 40000, 50000, 70000, 80000, 100000, 150000, 200000, 500000, 1000000)
+
+    ggplot(plot_df, aes(y = 10^model.output, x = 10^grounded.truth, group=grounded.truth)) + 
+        geom_boxplot(fill = "#CCCCCC")+
+        #geom_boxplot() + 
+        geom_jitter(pch=21, fill = "#77EE11", color = "#7788EE", width = .06, size = 0.8) +
+        scale_y_log10(breaks = log_breaks, labels=log_breaks) + 
+        scale_x_log10(breaks = log_breaks, labels=log_breaks) + 
+        ggtitle("OkCupid income model") +
+        xlab("actual income") + 
+        ylab("inferred income") +
+        geom_smooth()
+
+
+
+```
+
+
+A couple of things are apparent 
+
+## Age Model
+
+```{r, echo=1:7, warning = FALSE, fig.align='center', tidy = TRUE}
+    
+    model.start <- Sys.time()
+    age_model <- randomForest(age ~., train_data, importance = TRUE, ntree = 300)
+    model.time <- Sys.time()-model.start
+    
+    grounded.truth <- test_data$age
+
+    model.output <- predict(age_model, test_data %>% select(-age))
+
+```
+Overll it took `r model.time` seconds to model `r nrow(train_data)` points. The model importance is shown below.   
+
+```{r, echo=FALSE, warning = FALSE, fig.align='center', tidy = TRUE}
+
+    # sort model importance
+    importance(age_model, type=1)
+
+    plot_df <- cbind(grounded.truth, model.output) %>% as_data_frame
+    plot_df$sample <- 1:nrow(plot_df)
+
+    log_breaks = c(20000, 30000, 40000, 50000, 70000, 80000, 100000, 150000, 200000, 500000, 1000000)
+
+    ggplot(plot_df, aes(y = model.output, x = grounded.truth, group=grounded.truth)) + 
+        geom_boxplot(fill = "#CCCCCC")+
+        #geom_boxplot() + 
+        geom_jitter(pch=21, fill = "#77EE11", color = "#7788EE", width = .06, size = 0.8) +
+        #scale_y_log10(breaks = log_breaks, labels=log_breaks) + 
+        #scale_x_log10(breaks = log_breaks, labels=log_breaks) + 
+        ggtitle("OkCupid age model") +
+        xlab("actual age") + 
+        ylab("inferred age") +
+        geom_smooth()
+
+
+
+```
